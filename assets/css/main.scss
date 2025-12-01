@@ -96,8 +96,15 @@ body {
   object-fit: contain;
   background-color: $color-bg-dark;
   border-radius: 50%;
-  padding: 4px;
+  padding: 6px;
   border: 2px solid $color-accent-red;
+  box-shadow: 0 0 10px rgba($color-accent-red, 0.5);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    box-shadow: 0 0 15px rgba($color-accent-red, 0.8);
+    transform: scale(1.05);
+  }
 }
 
 .site-nav {
