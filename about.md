@@ -29,7 +29,7 @@ With a coaching philosophy centered on building strong foundations, fostering co
 
 > "Movement Without Limits"
 
-Our program is designed to adapt to every individual's needs, ensuring that gymnastics is accessible, safe, and fun for all abilities.
+I believe gymnastics should be accessible to everyone. My training programs are designed to adapt to every individual's needs, ensuring a safe and enjoyable experience for all abilities.
 
 <!-- Placeholder for action images -->
 *[Gallery of coaching and gymnastics images coming soon]*

@@ -7,7 +7,7 @@ title: Home
 
 ## Movement Without Limits
 
-Our program is designed to adapt to every individual's needs, ensuring that gymnastics is accessible, safe, and fun for all abilities.
+My program is designed to adapt to every individual's needs, ensuring that gymnastics is accessible, safe, and fun for all abilities.
 
 ---
 
