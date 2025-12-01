@@ -91,12 +91,12 @@ body {
 }
 
 .site-logo {
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
-  background-color: $color-bg-dark;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
-  padding: 6px;
+  object-fit: cover;
+  padding: 2px;
+  background-color: $color-bg-dark;
   border: 2px solid $color-accent-red;
   box-shadow: 0 0 10px rgba($color-accent-red, 0.5);
   transition: all 0.3s ease;
