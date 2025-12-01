@@ -1,6 +1,29 @@
 # Aidan Bevan - Personal Website
 
-A Jekyll-based personal website hosted on GitHub Pages.
+A Jekyll-based personal website hosted on GitHub Pages featuring a modern dark theme design.
+
+## Design
+
+This site features a visually striking **modern dark theme** with prominent red and white accents:
+
+### Color Palette
+- **Background**: Deep dark (#0d0d0d) with card panels (#1a1a1a)
+- **Primary Accent**: Vibrant red (#e63946) for CTAs, highlights, and interactive elements
+- **Text**: High-contrast white (#ffffff) and light gray (#e0e0e0)
+
+### Typography
+Using Google Fonts for a modern, professional look:
+- **Headings**: [Montserrat](https://fonts.google.com/specimen/Montserrat) - Bold, attention-grabbing
+- **Body**: [Open Sans](https://fonts.google.com/specimen/Open+Sans) - Clean, highly readable
+
+### Features
+- **Fixed Navigation Bar**: Sticky header with smooth scroll and hover effects
+- **Hero Section**: Large, attention-grabbing headline with call-to-action buttons
+- **Card Components**: Styled panels with hover depth effects and red accent borders
+- **Pop-out Buttons**: Primary and outline button styles with red hover animations
+- **Testimonial/Blockquote**: Styled quote section with decorative elements
+- **Interactive Elements**: Subtle box shadows and transform effects on hover
+- **Fully Responsive**: Mobile-optimized layout and typography
 
 ## Prerequisites
 

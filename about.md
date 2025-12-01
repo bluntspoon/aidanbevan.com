@@ -4,38 +4,49 @@ title: About
 permalink: /about/
 ---
 
-# About Aidan Bevan
-
-<!-- Placeholder for profile image -->
-*[Profile image coming soon]*
+<div class="about-intro">
+  <h1>About Aidan Bevan</h1>
+  <p>Passionate gymnastics coach with years of experience helping athletes of all levels reach their full potential.</p>
+</div>
 
 ## Biography
 
 Aidan Bevan began his journey in gymnastics at a young age, developing a deep understanding of the sport through years of training and competition. His passion for gymnastics naturally evolved into a desire to coach and mentor the next generation of athletes.
 
-*[More biographical details to be added, including early training, competitive achievements, and personal milestones]*
+---
 
 ## Coaching Experience
 
 With a coaching philosophy centered on building strong foundations, fostering confidence, and celebrating individual progress, Aidan creates training programs that are both challenging and enjoyable.
 
-### Key Highlights
-
-- *[Years of coaching experience to be added]*
-- *[Notable achievements and certifications to be added]*
-- *[Specialized training areas to be added]*
-
-### Coaching Philosophy
-
-> "Movement Without Limits"
-
-I believe gymnastics should be accessible to everyone. My training programs are designed to adapt to every individual's needs, ensuring a safe and enjoyable experience for all abilities.
-
-<!-- Placeholder for action images -->
-*[Gallery of coaching and gymnastics images coming soon]*
+<div class="card-grid">
+  <div class="card">
+    <h3 class="card-title">Expert Training</h3>
+    <p class="card-text">Comprehensive programs designed to develop technical skills while building strength and flexibility in a safe environment.</p>
+  </div>
+  <div class="card">
+    <h3 class="card-title">All Abilities Welcome</h3>
+    <p class="card-text">Training programs that adapt to every individual's needs, ensuring gymnastics is accessible for beginners through advanced athletes.</p>
+  </div>
+  <div class="card">
+    <h3 class="card-title">Confidence Building</h3>
+    <p class="card-text">Focus on personal growth and achievement, celebrating each milestone while pushing towards new goals.</p>
+  </div>
+</div>
 
 ---
 
-## Get in Touch
+## Coaching Philosophy
 
-Interested in learning more or working together? Feel free to [contact me](mailto:aidan@aidanbevan.com).
+<div class="testimonial">
+  <p class="testimonial-text">Movement Without Limits — I believe gymnastics should be accessible to everyone. My training programs are designed to adapt to every individual's needs, ensuring a safe and enjoyable experience for all abilities.</p>
+  <p class="testimonial-author">— Aidan Bevan</p>
+</div>
+
+---
+
+<div class="contact-section">
+  <h2 class="contact-title">Get in Touch</h2>
+  <p class="contact-text">Interested in learning more or working together?</p>
+  <a href="mailto:aidan@aidanbevan.com" class="contact-link">Contact Me</a>
+</div>
