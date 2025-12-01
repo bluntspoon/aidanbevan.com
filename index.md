@@ -1,6 +1,7 @@
 ---
 layout: home
 title: Home
+description: Aidan Bevan - Certified Junior Gymnastics Coach in Pinetown, South Africa, specializing in early childhood development and inclusive training for young children of all abilities.
 ---
 
 <div class="hero-image-wrapper">

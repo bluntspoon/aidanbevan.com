@@ -2,6 +2,7 @@
 layout: page
 title: About
 permalink: /about/
+description: Learn about Aidan Bevan, certified Junior Gymnastics Coach with 6+ years of competitive experience, specializing in inclusive gymnastics programs for young children in KwaZulu-Natal.
 ---
 
 <div class="about-intro">

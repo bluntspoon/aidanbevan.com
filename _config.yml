@@ -1,8 +1,26 @@
 # Site settings
 title: Aidan Bevan
-description: Professional Gymnastics Coach | Movement Without Limits
+description: Certified Junior Gymnastics Coach specializing in early childhood development and inclusive training for young children of all abilities in South Africa.
 baseurl: ""
 url: "https://aidanbevan.com"
+author:
+  name: Aidan Bevan
+  email: aidanbevan09@gmail.com
+
+# Social Media
+social:
+  name: Aidan Bevan
+  links: []
+
+# SEO Settings
+logo: /assets/images/gymnast.png
+locale: en_ZA
+
+# Location
+location:
+  city: Pinetown
+  region: KwaZulu-Natal
+  country: South Africa
 
 # Build settings
 markdown: kramdown

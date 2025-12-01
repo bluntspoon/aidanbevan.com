@@ -2,6 +2,7 @@
 layout: page
 title: Contact
 permalink: /contact/
+description: Get in touch with Aidan Bevan for gymnastics coaching inquiries. Serving Pinetown and surrounding areas with specialized programs for young children of all abilities.
 ---
 
 <div class="contact-form-container">
