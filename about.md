@@ -6,12 +6,12 @@ description: Learn about Aidan Bevan, certified Junior Gymnastics Coach with 6+ 
 ---
 
 <div class="about-intro">
+  <div class="profile-image-wrapper">
+    <img src="/assets/images/aidan.jpg" alt="Aidan Bevan" class="profile-image">
+  </div>
   <div class="about-intro-content">
     <h1>About Aidan Bevan</h1>
     <p>Certified Junior Gymnastics Coach and competitive gymnast specializing in early childhood development and inclusive gymnastics. Working with young children of all abilities, Aidan creates nurturing, adaptive programs that celebrate each child's unique journey.</p>
-  </div>
-  <div class="profile-image-wrapper">
-    <img src="/assets/images/aidan.jpg" alt="Aidan Bevan" class="profile-image">
   </div>
 </div>
 
