@@ -253,6 +253,7 @@ body {
 
   &:hover {
     background: $color-accent-red-hover;
+    color: $color-text-white !important;
     box-shadow: 0 6px 25px rgba($color-accent-red, 0.6);
     transform: translateY(-3px);
   }
@@ -265,6 +266,8 @@ body {
 
   &:hover {
     background: $color-accent-red;
+    color: $color-text-white !important;
+    border-color: $color-accent-red;
     box-shadow: 0 4px 15px rgba($color-accent-red, 0.4);
     transform: translateY(-2px);
   }
