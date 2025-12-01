@@ -1,0 +1,638 @@
+---
+# Front matter required for Jekyll to process this file
+---
+
+// Google Fonts Import
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Open+Sans:wght@400;500;600&display=swap');
+
+// =============================================================================
+// COLOR PALETTE - Modern Dark Theme with Red/White Accents
+// =============================================================================
+$color-bg-dark: #0d0d0d;
+$color-bg-card: #1a1a1a;
+$color-bg-card-hover: #222222;
+$color-border: #2a2a2a;
+
+$color-accent-red: #e63946;
+$color-accent-red-hover: #ff4d5a;
+$color-accent-red-dark: #c82333;
+
+$color-text-white: #ffffff;
+$color-text-light: #e0e0e0;
+$color-text-muted: #a0a0a0;
+
+// =============================================================================
+// TYPOGRAPHY
+// =============================================================================
+$font-heading: 'Montserrat', sans-serif;
+$font-body: 'Open Sans', sans-serif;
+
+// =============================================================================
+// BASE STYLES
+// =============================================================================
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: $font-body;
+  font-size: 16px;
+  line-height: 1.7;
+  color: $color-text-light;
+  background-color: $color-bg-dark;
+  min-height: 100vh;
+}
+
+// =============================================================================
+// HEADER / NAVIGATION
+// =============================================================================
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: rgba($color-bg-dark, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid $color-border;
+  padding: 1rem 2rem;
+  transition: all 0.3s ease;
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.site-title {
+  font-family: $font-heading;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: $color-text-white;
+  text-decoration: none;
+  letter-spacing: 0.5px;
+  transition: color 0.3s ease;
+
+  &:hover {
+    color: $color-accent-red;
+  }
+}
+
+.site-nav {
+  display: flex;
+  gap: 2rem;
+
+  a {
+    font-family: $font-body;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: $color-text-muted;
+    text-decoration: none;
+    position: relative;
+    padding: 0.5rem 0;
+    transition: color 0.3s ease;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: $color-accent-red;
+      transition: width 0.3s ease;
+    }
+
+    &:hover {
+      color: $color-text-white;
+
+      &::after {
+        width: 100%;
+      }
+    }
+  }
+}
+
+// =============================================================================
+// MAIN CONTENT
+// =============================================================================
+.page-content {
+  padding-top: 80px; // Account for fixed header
+  min-height: calc(100vh - 80px);
+}
+
+.wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+}
+
+// =============================================================================
+// HERO SECTION
+// =============================================================================
+.hero {
+  text-align: center;
+  padding: 6rem 2rem;
+  background: linear-gradient(135deg, $color-bg-dark 0%, darken($color-bg-card, 5%) 100%);
+  border-bottom: 1px solid $color-border;
+}
+
+.hero-content {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.hero-title {
+  font-family: $font-heading;
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: $color-text-white;
+  margin: 0 0 1rem;
+  letter-spacing: -1px;
+  line-height: 1.1;
+
+  @media (max-width: 768px) {
+    font-size: 2.5rem;
+  }
+}
+
+.hero-slogan {
+  font-family: $font-heading;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: $color-accent-red;
+  margin: 0 0 2rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+
+  @media (max-width: 768px) {
+    font-size: 1.25rem;
+  }
+}
+
+.hero-description {
+  font-size: 1.2rem;
+  color: $color-text-muted;
+  max-width: 700px;
+  margin: 0 auto 2.5rem;
+  line-height: 1.8;
+}
+
+.hero-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+// =============================================================================
+// BUTTONS
+// =============================================================================
+.btn {
+  display: inline-block;
+  font-family: $font-heading;
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 1rem 2.5rem;
+  border-radius: 50px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0.5rem;
+
+  @media (max-width: 768px) {
+    padding: 0.875rem 2rem;
+    font-size: 0.9rem;
+  }
+}
+
+.btn-primary {
+  background: $color-accent-red;
+  color: $color-text-white;
+  box-shadow: 0 4px 15px rgba($color-accent-red, 0.4);
+
+  &:hover {
+    background: $color-accent-red-hover;
+    box-shadow: 0 6px 25px rgba($color-accent-red, 0.6);
+    transform: translateY(-3px);
+  }
+}
+
+.btn-outline {
+  background: transparent;
+  color: $color-text-white;
+  border: 2px solid $color-accent-red;
+
+  &:hover {
+    background: $color-accent-red;
+    box-shadow: 0 4px 15px rgba($color-accent-red, 0.4);
+    transform: translateY(-2px);
+  }
+}
+
+// =============================================================================
+// SECTION STYLES
+// =============================================================================
+.section {
+  padding: 5rem 2rem;
+}
+
+.section-title {
+  font-family: $font-heading;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: $color-text-white;
+  margin: 0 0 3rem;
+  text-align: center;
+  position: relative;
+
+  &::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 4px;
+    background: $color-accent-red;
+    margin: 1rem auto 0;
+    border-radius: 2px;
+  }
+}
+
+// =============================================================================
+// CARDS / PANELS
+// =============================================================================
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.card {
+  background: $color-bg-card;
+  border: 1px solid $color-border;
+  border-radius: 12px;
+  padding: 2rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: $color-accent-red;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+  }
+
+  &:hover {
+    background: $color-bg-card-hover;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    transform: translateY(-5px);
+
+    &::before {
+      transform: scaleX(1);
+    }
+  }
+}
+
+.card-title {
+  font-family: $font-heading;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: $color-text-white;
+  margin: 0 0 1rem;
+}
+
+.card-text {
+  color: $color-text-muted;
+  margin: 0;
+  line-height: 1.7;
+}
+
+.card-link {
+  display: inline-block;
+  margin-top: 1rem;
+  font-family: $font-heading;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: $color-accent-red;
+  text-decoration: none;
+  transition: all 0.3s ease;
+
+  &:hover {
+    color: $color-accent-red-hover;
+    transform: translateX(5px);
+  }
+}
+
+.card-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+  padding: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.affiliation-card {
+  text-align: center;
+  
+  .card-title {
+    margin-top: 0.5rem;
+  }
+  
+  .card-link {
+    display: block;
+    margin-top: 1.5rem;
+  }
+}
+
+// =============================================================================
+// BLOCKQUOTE / TESTIMONIAL
+// =============================================================================
+.testimonial {
+  background: $color-bg-card;
+  border-left: 4px solid $color-accent-red;
+  border-radius: 0 12px 12px 0;
+  padding: 2rem 2.5rem;
+  margin: 3rem auto;
+  max-width: 800px;
+  position: relative;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+
+  &::before {
+    content: '"';
+    font-family: Georgia, serif;
+    font-size: 5rem;
+    color: $color-accent-red;
+    opacity: 0.3;
+    position: absolute;
+    top: -10px;
+    left: 20px;
+  }
+}
+
+blockquote {
+  background: $color-bg-card;
+  border-left: 4px solid $color-accent-red;
+  border-radius: 0 8px 8px 0;
+  padding: 1.5rem 2rem;
+  margin: 2rem 0;
+  font-style: italic;
+  color: $color-text-light;
+  position: relative;
+
+  p {
+    margin: 0;
+    font-size: 1.1rem;
+    line-height: 1.8;
+  }
+}
+
+.testimonial-text {
+  font-family: $font-body;
+  font-size: 1.25rem;
+  font-style: italic;
+  color: $color-text-light;
+  margin: 0 0 1.5rem;
+  line-height: 1.8;
+}
+
+.testimonial-author {
+  font-family: $font-heading;
+  font-weight: 600;
+  color: $color-accent-red;
+  font-size: 1rem;
+}
+
+// =============================================================================
+// HEADINGS
+// =============================================================================
+h1, h2, h3, h4, h5, h6 {
+  font-family: $font-heading;
+  color: $color-text-white;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  line-height: 1.3;
+}
+
+h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+h2 {
+  font-size: 2rem;
+  font-weight: 600;
+  color: $color-accent-red;
+}
+
+h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+// =============================================================================
+// LINKS
+// =============================================================================
+a {
+  color: $color-accent-red;
+  text-decoration: none;
+  transition: all 0.3s ease;
+
+  &:hover {
+    color: $color-accent-red-hover;
+  }
+}
+
+// =============================================================================
+// LISTS
+// =============================================================================
+ul, ol {
+  padding-left: 1.5rem;
+
+  li {
+    margin-bottom: 0.5rem;
+    color: $color-text-light;
+
+    &::marker {
+      color: $color-accent-red;
+    }
+  }
+}
+
+// =============================================================================
+// HORIZONTAL RULE
+// =============================================================================
+hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent, $color-border, transparent);
+  margin: 3rem 0;
+}
+
+// =============================================================================
+// CONTACT SECTION
+// =============================================================================
+.contact-section {
+  background: $color-bg-card;
+  border-radius: 16px;
+  padding: 3rem;
+  text-align: center;
+  border: 1px solid $color-border;
+  margin-top: 3rem;
+}
+
+.contact-title {
+  font-family: $font-heading;
+  font-size: 2rem;
+  color: $color-text-white;
+  margin: 0 0 1rem;
+}
+
+.contact-text {
+  color: $color-text-muted;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+}
+
+.contact-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: $font-heading;
+  font-weight: 600;
+  color: $color-text-white;
+  background: $color-accent-red;
+  padding: 1rem 2rem;
+  border-radius: 50px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba($color-accent-red, 0.4);
+
+  &:hover {
+    background: $color-accent-red-hover;
+    box-shadow: 0 6px 25px rgba($color-accent-red, 0.6);
+    transform: translateY(-3px);
+    color: $color-text-white;
+  }
+}
+
+// =============================================================================
+// FOOTER
+// =============================================================================
+.site-footer {
+  background: $color-bg-card;
+  border-top: 1px solid $color-border;
+  padding: 2rem;
+  text-align: center;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  color: $color-text-muted;
+  font-size: 0.9rem;
+}
+
+// =============================================================================
+// PAGE SPECIFIC - ABOUT
+// =============================================================================
+.about-intro {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto 4rem;
+  
+  h1 {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  p {
+    font-size: 1.2rem;
+    color: $color-text-muted;
+  }
+}
+
+.about-section {
+  margin-bottom: 4rem;
+}
+
+.highlight-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+
+  li {
+    background: $color-bg-card;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 3px solid $color-accent-red;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: $color-bg-card-hover;
+      transform: translateX(5px);
+    }
+  }
+}
+
+// =============================================================================
+// RESPONSIVE ADJUSTMENTS
+// =============================================================================
+@media (max-width: 768px) {
+  .site-header {
+    padding: 1rem;
+  }
+
+  .header-content {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .site-nav {
+    gap: 1.5rem;
+  }
+
+  .hero {
+    padding: 4rem 1.5rem;
+  }
+
+  .section {
+    padding: 3rem 1.5rem;
+  }
+
+  .wrapper {
+    padding: 2rem 1.5rem;
+  }
+
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .testimonial {
+    padding: 1.5rem;
+    margin: 2rem 1rem;
+  }
+}

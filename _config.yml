@@ -1,12 +1,16 @@
 # Site settings
 title: Aidan Bevan
-description: Professional Gymnastics Coach
+description: Professional Gymnastics Coach | Movement Without Limits
 baseurl: ""
 url: "https://aidanbevan.com"
 
 # Build settings
 markdown: kramdown
-theme: minima
+
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
 
 # Exclude from processing
 exclude:
@@ -14,3 +18,4 @@ exclude:
   - Gemfile.lock
   - README.md
   - vendor
+  - node_modules
