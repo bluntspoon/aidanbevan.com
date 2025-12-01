@@ -327,6 +327,45 @@ body {
   line-height: 1.7;
 }
 
+.card-link {
+  display: inline-block;
+  margin-top: 1rem;
+  font-family: $font-heading;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: $color-accent-red;
+  text-decoration: none;
+  transition: all 0.3s ease;
+
+  &:hover {
+    color: $color-accent-red-hover;
+    transform: translateX(5px);
+  }
+}
+
+.card-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  background: $color-text-white;
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.affiliation-card {
+  text-align: center;
+  
+  .card-title {
+    margin-top: 0.5rem;
+  }
+  
+  .card-link {
+    display: block;
+    margin-top: 1.5rem;
+  }
+}
+
 // =============================================================================
 // BLOCKQUOTE / TESTIMONIAL
 // =============================================================================
