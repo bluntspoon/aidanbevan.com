@@ -67,5 +67,5 @@ With a coaching philosophy centered on building strong foundations, fostering co
 <div class="contact-section">
   <h2 class="contact-title">Get in Touch</h2>
   <p class="contact-text">Interested in learning more or working together?</p>
-  <a href="mailto:aidan@aidanbevan.com" class="contact-link">Contact Me</a>
+  <a href="mailto:aidanbevan09@gmail.com" class="contact-link">Contact Me</a>
 </div>

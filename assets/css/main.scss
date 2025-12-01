@@ -151,6 +151,34 @@ body {
   margin: 0 auto;
 }
 
+.hero-image-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.hero-image {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  object-fit: cover;
+  padding: 2px;
+  background-color: $color-bg-dark;
+  border: 4px solid $color-accent-red;
+  box-shadow: 0 8px 30px rgba($color-accent-red, 0.4);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 12px 40px rgba($color-accent-red, 0.6);
+  }
+
+  @media (max-width: 768px) {
+    width: 150px;
+    height: 150px;
+  }
+}
+
 .hero-title {
   font-family: $font-heading;
   font-size: 3.5rem;
@@ -552,6 +580,115 @@ hr {
   margin: 0 auto;
   color: $color-text-muted;
   font-size: 0.9rem;
+}
+
+// =============================================================================
+// CONTACT FORM
+// =============================================================================
+.contact-form-container {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.contact-intro {
+  text-align: center;
+  margin-bottom: 3rem;
+
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    font-size: 1.1rem;
+    color: $color-text-muted;
+  }
+}
+
+.contact-form {
+  background: $color-bg-card;
+  border: 1px solid $color-border;
+  border-radius: 12px;
+  padding: 2.5rem;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+
+  label {
+    display: block;
+    font-family: $font-heading;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: $color-text-light;
+    margin-bottom: 0.5rem;
+
+    .required {
+      color: $color-accent-red;
+    }
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  select,
+  textarea {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    font-family: $font-body;
+    font-size: 1rem;
+    color: $color-text-light;
+    background: $color-bg-dark;
+    border: 2px solid $color-border;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+
+    &:focus {
+      outline: none;
+      border-color: $color-accent-red;
+      box-shadow: 0 0 0 3px rgba($color-accent-red, 0.1);
+    }
+
+    &::placeholder {
+      color: $color-text-muted;
+    }
+  }
+
+  select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23a0a0a0' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    padding-right: 2.5rem;
+  }
+
+  textarea {
+    resize: vertical;
+    min-height: 120px;
+  }
+}
+
+.contact-alternative {
+  text-align: center;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid $color-border;
+
+  p {
+    color: $color-text-muted;
+    font-size: 0.95rem;
+  }
+
+  a {
+    font-weight: 600;
+    color: $color-accent-red;
+
+    &:hover {
+      color: $color-accent-red-hover;
+    }
+  }
 }
 
 // =============================================================================
