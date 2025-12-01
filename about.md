@@ -19,15 +19,15 @@ Aidan Bevan began his journey in gymnastics at a young age, developing a deep un
 
 <div class="card-grid">
   <div class="card affiliation-card">
-    <img src="https://www.google.com/s2/favicons?domain=ptngym.co.za&sz=64" alt="PTN Gym" class="card-icon">
-    <h3 class="card-title">Home Gym</h3>
-    <p class="card-text">Proud member and coach at PTN Gym, providing world-class gymnastics training facilities.</p>
-    <a href="https://www.ptngym.co.za/" class="card-link" target="_blank" rel="noopener">Visit PTN Gym →</a>
+    <img src="https://www.google.com/s2/favicons?domain=ptngym.co.za&sz=64" alt="Pinetown Gymnastics" class="card-icon">
+    <h3 class="card-title">Pinetown Gymnastics</h3>
+    <p class="card-text">One of KwaZulu-Natal's largest and best-equipped gymnastics clubs, offering programs from beginner to Olympic-level training.</p>
+    <a href="https://www.ptngym.co.za/" class="card-link" target="_blank" rel="noopener">Visit Pinetown Gymnastics →</a>
   </div>
   <div class="card affiliation-card">
     <img src="https://www.google.com/s2/favicons?domain=gymnasticssa.co.za&sz=64" alt="Gymnastics South Africa" class="card-icon">
-    <h3 class="card-title">National Governing Body</h3>
-    <p class="card-text">Affiliated with Gymnastics South Africa, the national governing body for gymnastics in the country.</p>
+    <h3 class="card-title">Gymnastics South Africa</h3>
+    <p class="card-text">The national governing body promoting gymnastics excellence and empowering athletes across all disciplines.</p>
     <a href="https://gymnasticssa.co.za/" class="card-link" target="_blank" rel="noopener">Visit Gymnastics SA →</a>
   </div>
 </div>
