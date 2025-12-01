@@ -1,0 +1,16 @@
+# Site settings
+title: Aidan Bevan
+description: Professional Gymnastics Coach
+baseurl: ""
+url: "https://aidanbevan.com"
+
+# Build settings
+markdown: kramdown
+theme: minima
+
+# Exclude from processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - vendor
