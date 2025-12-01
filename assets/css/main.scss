@@ -187,6 +187,13 @@ body {
   line-height: 1.8;
 }
 
+.hero-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
 // =============================================================================
 // BUTTONS
 // =============================================================================
@@ -203,6 +210,12 @@ body {
   border: none;
   text-transform: uppercase;
   letter-spacing: 1px;
+  margin: 0.5rem;
+
+  @media (max-width: 768px) {
+    padding: 0.875rem 2rem;
+    font-size: 0.9rem;
+  }
 }
 
 .btn-primary {
