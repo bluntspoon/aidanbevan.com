@@ -5,13 +5,24 @@ permalink: /about/
 ---
 
 <div class="about-intro">
-  <h1>About Aidan Bevan</h1>
-  <p>Passionate gymnastics coach with years of experience helping athletes of all levels reach their full potential.</p>
+  <div class="about-intro-content">
+    <h1>About Aidan Bevan</h1>
+    <p>Certified Junior Gymnastics Coach and competitive gymnast specializing in early childhood development and inclusive gymnastics. Working with young children of all abilities, Aidan creates nurturing, adaptive programs that celebrate each child's unique journey.</p>
+  </div>
+  <div class="profile-image-wrapper">
+    <img src="/assets/images/aidan.jpg" alt="Aidan Bevan" class="profile-image">
+  </div>
 </div>
 
 ## Biography
 
 Aidan Bevan began his journey in gymnastics at a young age, developing a deep understanding of the sport through years of training and competition. His passion for gymnastics naturally evolved into a desire to coach and mentor the next generation of athletes.
+
+For over six years, Aidan has been an integral member of the Pinetown Gymnastics "Wild Dogs" Club, where he has competed at both provincial and national levels across South Africa. This competitive experience has given him invaluable insights into the dedication, discipline, and technical precision required to excel in gymnastics.
+
+In 2025, Aidan achieved his certification as a Junior Gymnastics Coach, marking the beginning of his professional coaching career focused on early childhood development. He trains young children at Pinetown Gymnastics and collaborates with several surrounding preschools, introducing age-appropriate gymnastics fundamentals through play-based learning.
+
+Aidan is deeply committed to inclusive gymnastics and works extensively with children with disabilities. He volunteers at Khanyisa School for the Disabled and leads specialized classes for children with Down syndrome every Saturday. This inclusive approach reflects his core belief that every child deserves the opportunity to experience the joy and developmental benefits of gymnastics, regardless of ability.
 
 ---
 
@@ -34,22 +45,41 @@ Aidan Bevan began his journey in gymnastics at a young age, developing a deep un
 
 ---
 
-## Coaching Experience
+## Qualifications & Experience
+
+<div class="card-grid">
+  <div class="card">
+    <h3 class="card-title">Certified Junior Coach</h3>
+    <p class="card-text">Qualified as a Junior Gymnastics Coach in 2025, bringing technical expertise and competitive experience to every training session.</p>
+  </div>
+  <div class="card">
+    <h3 class="card-title">Competitive Background</h3>
+    <p class="card-text">6+ years competing at provincial and national levels across South Africa as part of the Pinetown Gymnastics "Wild Dogs" Club.</p>
+  </div>
+  <div class="card">
+    <h3 class="card-title">Inclusive Training</h3>
+    <p class="card-text">Specialized experience working with young children with disabilities, including students with Down syndrome, creating adaptive programs that celebrate every child's abilities.</p>
+  </div>
+</div>
+
+---
+
+## Coaching Approach
 
 With a coaching philosophy centered on building strong foundations, fostering confidence, and celebrating individual progress, Aidan creates training programs that are both challenging and enjoyable.
 
 <div class="card-grid">
   <div class="card">
-    <h3 class="card-title">Expert Training</h3>
-    <p class="card-text">Comprehensive programs designed to develop technical skills while building strength and flexibility in a safe environment.</p>
+    <h3 class="card-title">Technical Excellence</h3>
+    <p class="card-text">Drawing from competitive experience to teach proper form, technique, and progression in a safe and supportive environment.</p>
   </div>
   <div class="card">
-    <h3 class="card-title">All Abilities Welcome</h3>
-    <p class="card-text">Training programs that adapt to every individual's needs, ensuring gymnastics is accessible for beginners through advanced athletes.</p>
+    <h3 class="card-title">Early Development</h3>
+    <p class="card-text">Specialized preschool programs introducing fundamental movement patterns and gymnastics basics through play and structured activities.</p>
   </div>
   <div class="card">
-    <h3 class="card-title">Confidence Building</h3>
-    <p class="card-text">Focus on personal growth and achievement, celebrating each milestone while pushing towards new goals.</p>
+    <h3 class="card-title">Adaptive Methods</h3>
+    <p class="card-text">Individualized coaching strategies designed for young children, recognizing developmental stages and celebrating each child's unique abilities and progress.</p>
   </div>
 </div>
 
@@ -58,7 +88,7 @@ With a coaching philosophy centered on building strong foundations, fostering co
 ## Coaching Philosophy
 
 <div class="testimonial">
-  <p class="testimonial-text">Movement Without Limits — I believe gymnastics should be accessible to everyone. My training programs are designed to adapt to every individual's needs, ensuring a safe and enjoyable experience for all abilities.</p>
+  <p class="testimonial-text">Movement Without Limits — Every child deserves the opportunity to explore movement and discover their potential. I specialize in creating inclusive, developmentally appropriate gymnastics programs where young children of all abilities can thrive together in a supportive, joyful environment.</p>
   <p class="testimonial-author">— Aidan Bevan</p>
 </div>
 
