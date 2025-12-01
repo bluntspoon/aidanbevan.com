@@ -3,15 +3,15 @@ layout: home
 title: Home
 ---
 
-Welcome to the website of **Aidan Bevan**, Professional Gymnastics Coach.
+# Aidan Bevan – Professional Gymnast and Coach
+
+## Movement Without Limits
+
+My program is designed to adapt to every individual's needs, ensuring that gymnastics is accessible, safe, and fun for all abilities.
+
+---
 
 Passionate gymnastics coach dedicated to helping young athletes develop their skills, confidence, and love for the sport. With a focus on proper technique, safety, and positive encouragement, I create a supportive environment where gymnasts can thrive.
-
-## About
-
-Aidan Bevan began his journey in gymnastics at a young age, developing a deep understanding of the sport through years of training and competition. His passion for gymnastics naturally evolved into a desire to coach and mentor the next generation of athletes.
-
-With a coaching philosophy centered on building strong foundations, fostering confidence, and celebrating individual progress, Aidan creates training programs that are both challenging and enjoyable.
 
 ## Contact
 
