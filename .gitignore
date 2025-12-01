@@ -1,0 +1,15 @@
+# Jekyll build output
+_site/
+
+# Ruby / Bundler
+.bundle/
+Gemfile.lock
+vendor/
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
