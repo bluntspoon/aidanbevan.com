@@ -175,6 +175,10 @@ body {
   display: flex;
   justify-content: center;
   margin-bottom: 2rem;
+
+  @media (max-width: 768px) {
+    margin-top: 5px;
+  }
 }
 
 .hero-image {
