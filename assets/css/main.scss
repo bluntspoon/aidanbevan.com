@@ -28,6 +28,219 @@ $font-heading: 'Montserrat', sans-serif;
 $font-body: 'Open Sans', sans-serif;
 
 // =============================================================================
+// ANIMATION KEYFRAMES
+// =============================================================================
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+// =============================================================================
+// PRELOADER / LOADING ANIMATION
+// =============================================================================
+.preloader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: $color-bg-dark;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+
+  &.hidden {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+.preloader-content {
+  text-align: center;
+}
+
+.preloader-spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid $color-border;
+  border-top-color: $color-accent-red;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1.5rem;
+}
+
+.preloader-text {
+  font-family: $font-heading;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: $color-text-white;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+// =============================================================================
+// PAGE TRANSITION
+// =============================================================================
+.page-transition {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: $color-bg-dark;
+  z-index: 8000;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.5s cubic-bezier(0.77, 0, 0.175, 1);
+
+  &.active {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+}
+
+// =============================================================================
+// BACK TO TOP BUTTON
+// =============================================================================
+.back-to-top {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 50px;
+  height: 50px;
+  background: $color-accent-red;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+  z-index: 1000;
+  box-shadow: 0 4px 15px rgba($color-accent-red, 0.4);
+
+  &.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  &:hover {
+    background: $color-accent-red-hover;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 25px rgba($color-accent-red, 0.6);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: $color-text-white;
+    transition: transform 0.3s ease;
+  }
+
+  &:hover svg {
+    transform: translateY(-2px);
+  }
+
+  @media (max-width: 768px) {
+    bottom: 20px;
+    right: 20px;
+    width: 45px;
+    height: 45px;
+  }
+}
+
+// =============================================================================
 // BASE STYLES
 // =============================================================================
 *, *::before, *::after {
@@ -63,6 +276,14 @@ body {
   border-bottom: 1px solid $color-border;
   padding: 1rem 2rem;
   transition: all 0.3s ease;
+  animation: fadeIn 0.5s ease;
+
+  // Scrolled state - more compact header
+  &.scrolled {
+    padding: 0.75rem 2rem;
+    background: rgba($color-bg-dark, 0.98);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
 }
 
 .header-content {
@@ -83,10 +304,12 @@ body {
   color: $color-text-white;
   text-decoration: none;
   letter-spacing: 0.5px;
-  transition: color 0.3s ease;
+  transition: all 0.3s ease;
+  animation: slideInLeft 0.6s ease;
 
   &:hover {
     color: $color-accent-red;
+    transform: scale(1.02);
   }
 }
 
@@ -102,14 +325,62 @@ body {
   transition: all 0.3s ease;
   
   &:hover {
-    box-shadow: 0 0 15px rgba($color-accent-red, 0.8);
-    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba($color-accent-red, 0.8);
+    transform: scale(1.1) rotate(5deg);
+    animation: pulse 0.5s ease;
+  }
+
+  .scrolled & {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+// Hamburger Menu Toggle
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 28px;
+  height: 20px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 1001;
+
+  span {
+    display: block;
+    width: 100%;
+    height: 3px;
+    background: $color-text-white;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+    transform-origin: center;
+  }
+
+  &.active {
+    span:nth-child(1) {
+      transform: translateY(8.5px) rotate(45deg);
+    }
+    span:nth-child(2) {
+      opacity: 0;
+      transform: scaleX(0);
+    }
+    span:nth-child(3) {
+      transform: translateY(-8.5px) rotate(-45deg);
+    }
+  }
+
+  @media (max-width: 768px) {
+    display: flex;
   }
 }
 
 .site-nav {
   display: flex;
   gap: 2rem;
+  animation: slideInRight 0.6s ease;
 
   a {
     font-family: $font-body;
@@ -119,26 +390,81 @@ body {
     text-decoration: none;
     position: relative;
     padding: 0.5rem 0;
-    transition: color 0.3s ease;
+    transition: all 0.3s ease;
 
     &::after {
       content: '';
       position: absolute;
       bottom: 0;
-      left: 0;
+      left: 50%;
       width: 0;
       height: 2px;
       background: $color-accent-red;
-      transition: width 0.3s ease;
+      transition: all 0.3s ease;
+      transform: translateX(-50%);
     }
 
     &:hover {
       color: $color-text-white;
+      transform: translateY(-2px);
 
       &::after {
         width: 100%;
       }
     }
+  }
+
+  // Mobile navigation styles
+  @media (max-width: 768px) {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 70%;
+    max-width: 300px;
+    height: 100vh;
+    background: rgba($color-bg-dark, 0.98);
+    backdrop-filter: blur(15px);
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 2.5rem;
+    transform: translateX(100%);
+    transition: transform 0.4s cubic-bezier(0.77, 0, 0.175, 1);
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.3);
+    border-left: 1px solid $color-border;
+
+    &.active {
+      transform: translateX(0);
+    }
+
+    a {
+      font-size: 1.25rem;
+      padding: 0.75rem 0;
+    }
+  }
+}
+
+// Mobile nav overlay
+.nav-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+
+  &.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  @media (max-width: 768px) {
+    display: block;
   }
 }
 
@@ -164,17 +490,35 @@ body {
   padding: 6rem 2rem;
   background: linear-gradient(135deg, $color-bg-dark 0%, darken($color-bg-card, 5%) 100%);
   border-bottom: 1px solid $color-border;
+  position: relative;
+  overflow: hidden;
+
+  // Animated background gradient overlay
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(ellipse at center, rgba($color-accent-red, 0.08) 0%, transparent 70%);
+    animation: pulse 8s ease-in-out infinite;
+    pointer-events: none;
+  }
 }
 
 .hero-content {
   max-width: 900px;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
 .hero-image-wrapper {
   display: flex;
   justify-content: center;
   margin-bottom: 2rem;
+  animation: fadeInScale 0.8s ease;
 
   @media (max-width: 768px) {
     margin-top: 3rem;
@@ -190,11 +534,13 @@ body {
   background-color: $color-bg-dark;
   border: 4px solid $color-accent-red;
   box-shadow: 0 8px 30px rgba($color-accent-red, 0.4);
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
+  animation: float 6s ease-in-out infinite;
 
   &:hover {
-    transform: scale(1.05);
-    box-shadow: 0 12px 40px rgba($color-accent-red, 0.6);
+    transform: scale(1.1);
+    box-shadow: 0 12px 50px rgba($color-accent-red, 0.7);
+    animation-play-state: paused;
   }
 
   @media (max-width: 768px) {
@@ -211,6 +557,7 @@ body {
   margin: 0 0 1rem;
   letter-spacing: -1px;
   line-height: 1.1;
+  animation: fadeInUp 0.8s ease 0.2s backwards;
 
   @media (max-width: 768px) {
     font-size: 2.5rem;
@@ -225,6 +572,15 @@ body {
   margin: 0 0 2rem;
   letter-spacing: 2px;
   text-transform: uppercase;
+  animation: fadeInUp 0.8s ease 0.4s backwards;
+  
+  // Shimmer effect on text
+  background: linear-gradient(90deg, $color-accent-red, $color-accent-red-hover, $color-accent-red);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: fadeInUp 0.8s ease 0.4s backwards, shimmer 3s linear infinite 1.2s;
 
   @media (max-width: 768px) {
     font-size: 1.25rem;
@@ -237,6 +593,7 @@ body {
   max-width: 700px;
   margin: 0 auto 2.5rem;
   line-height: 1.8;
+  animation: fadeInUp 0.8s ease 0.6s backwards;
 }
 
 .hero-buttons {
@@ -244,6 +601,7 @@ body {
   flex-wrap: wrap;
   justify-content: center;
   gap: 1rem;
+  animation: fadeInUp 0.8s ease 0.8s backwards;
 }
 
 // =============================================================================
@@ -271,6 +629,14 @@ body {
 
 .highlight-card {
   text-align: center;
+  opacity: 0;
+  animation: fadeInUp 0.6s ease forwards;
+  
+  // Staggered animation for cards
+  &:nth-child(1) { animation-delay: 0.1s; }
+  &:nth-child(2) { animation-delay: 0.2s; }
+  &:nth-child(3) { animation-delay: 0.3s; }
+  &:nth-child(4) { animation-delay: 0.4s; }
   
   .card-title {
     font-size: 1.3rem;
@@ -281,6 +647,13 @@ body {
   font-size: 3rem;
   margin-bottom: 1rem;
   line-height: 1;
+  display: inline-block;
+  transition: transform 0.3s ease;
+  
+  .highlight-card:hover & {
+    transform: scale(1.2) rotate(10deg);
+    animation: bounceIn 0.5s ease;
+  }
   
   @media (max-width: 768px) {
     font-size: 2.5rem;
@@ -298,12 +671,33 @@ body {
   text-decoration: none;
   padding: 1rem 2.5rem;
   border-radius: 50px;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   cursor: pointer;
   border: none;
   text-transform: uppercase;
   letter-spacing: 1px;
   margin: 0.5rem;
+  position: relative;
+  overflow: hidden;
+
+  // Ripple effect base
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition: width 0.6s ease, height 0.6s ease;
+  }
+
+  &:active::before {
+    width: 300px;
+    height: 300px;
+  }
 
   @media (max-width: 768px) {
     padding: 0.875rem 2rem;
@@ -319,8 +713,12 @@ body {
   &:hover {
     background: $color-accent-red-hover;
     color: $color-text-white !important;
-    box-shadow: 0 6px 25px rgba($color-accent-red, 0.6);
-    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba($color-accent-red, 0.6);
+    transform: translateY(-4px) scale(1.02);
+  }
+
+  &:active {
+    transform: translateY(-1px) scale(0.98);
   }
 }
 
@@ -333,8 +731,12 @@ body {
     background: $color-accent-red;
     color: $color-text-white !important;
     border-color: $color-accent-red;
-    box-shadow: 0 4px 15px rgba($color-accent-red, 0.4);
-    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba($color-accent-red, 0.5);
+    transform: translateY(-4px) scale(1.02);
+  }
+
+  &:active {
+    transform: translateY(-1px) scale(0.98);
   }
 }
 
@@ -381,7 +783,7 @@ body {
   border: 1px solid $color-border;
   border-radius: 12px;
   padding: 2rem;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   position: relative;
   overflow: hidden;
 
@@ -392,19 +794,38 @@ body {
     left: 0;
     width: 100%;
     height: 4px;
-    background: $color-accent-red;
+    background: linear-gradient(90deg, $color-accent-red, $color-accent-red-hover);
     transform: scaleX(0);
     transform-origin: left;
-    transition: transform 0.3s ease;
+    transition: transform 0.4s ease;
+  }
+
+  // Glow effect
+  &::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba($color-accent-red, 0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
   }
 
   &:hover {
     background: $color-bg-card-hover;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-    transform: translateY(-5px);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba($color-accent-red, 0.15);
+    transform: translateY(-8px) scale(1.02);
+    border-color: rgba($color-accent-red, 0.3);
 
     &::before {
       transform: scaleX(1);
+    }
+
+    &::after {
+      opacity: 1;
     }
   }
 }
@@ -784,17 +1205,41 @@ $color-whatsapp-hover: #20bd5a;
   background: $color-whatsapp;
   color: $color-text-white;
   box-shadow: 0 4px 15px rgba($color-whatsapp, 0.4);
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   border: none;
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 1px;
+  position: relative;
+  overflow: hidden;
+
+  // Pulse animation for attention
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    animation: whatsappPulse 2s ease-in-out infinite;
+  }
 
   &:hover {
     background: $color-whatsapp-hover;
     color: $color-text-white !important;
-    box-shadow: 0 6px 25px rgba($color-whatsapp, 0.6);
-    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba($color-whatsapp, 0.6);
+    transform: translateY(-4px) scale(1.02);
+
+    &::after {
+      animation: none;
+    }
+
+    .whatsapp-icon {
+      transform: rotate(15deg) scale(1.1);
+    }
   }
 
   @media (max-width: 768px) {
@@ -803,10 +1248,22 @@ $color-whatsapp-hover: #20bd5a;
   }
 }
 
+@keyframes whatsappPulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}
+
 .whatsapp-icon {
   width: 24px;
   height: 24px;
   flex-shrink: 0;
+  transition: transform 0.3s ease;
 }
 
 .whatsapp-number {
@@ -937,8 +1394,8 @@ $color-whatsapp-hover: #20bd5a;
   }
 
   .header-content {
-    flex-direction: column;
-    gap: 1rem;
+    flex-direction: row;
+    justify-content: space-between;
   }
 
   .site-nav {
@@ -1098,3 +1555,58 @@ $color-whatsapp-hover: #20bd5a;
     max-height: 75vh;
   }
 }
+
+
+// =============================================================================
+// SCROLL ANIMATIONS
+// =============================================================================
+.animate-in {
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+// Scroll animation base state
+.about-section,
+.testimonial {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+
+  &.animate-in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// =============================================================================
+// LINK MICROINTERACTIONS
+// =============================================================================
+.card-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  &::after {
+    content: "";
+    display: inline-block;
+    transition: transform 0.3s ease;
+  }
+  
+  &:hover {
+    &::after {
+      transform: translateX(5px);
+    }
+  }
+}
+
+// =============================================================================
+// FOCUS STATES FOR ACCESSIBILITY
+// =============================================================================
+.btn:focus-visible,
+.back-to-top:focus-visible,
+.nav-toggle:focus-visible,
+.site-nav a:focus-visible {
+  outline: 2px solid $color-accent-red;
+  outline-offset: 3px;
+}
+
