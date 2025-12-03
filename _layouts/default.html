@@ -102,6 +102,11 @@
   </div>
 
   <script>
+    function isMobileDevice() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+             (window.innerWidth <= 768);
+    }
+
     function openCertificateModal(pdfUrl) {
       var modal = document.getElementById('certificate-modal');
       var iframe = document.getElementById('certificate-iframe');
@@ -129,7 +134,12 @@
     document.addEventListener('click', function(e) {
       if (e.target.classList.contains('certificate-link')) {
         e.preventDefault();
-        openCertificateModal(e.target.getAttribute('href'));
+        var pdfUrl = e.target.getAttribute('href');
+        if (isMobileDevice()) {
+          window.open(pdfUrl, '_blank');
+        } else {
+          openCertificateModal(pdfUrl);
+        }
       }
     });
   </script>
