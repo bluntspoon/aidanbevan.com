@@ -519,10 +519,6 @@ body {
   justify-content: center;
   margin-bottom: 2rem;
   animation: fadeInScale 0.8s ease;
-
-  @media (max-width: 768px) {
-    margin-top: 3rem;
-  }
 }
 
 .hero-image {
