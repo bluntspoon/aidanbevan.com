@@ -53,7 +53,22 @@ Using Google Fonts for a modern, professional look:
 
 ## Deployment
 
-This site is automatically deployed to GitHub Pages via GitHub Actions when changes are pushed to the `main` branch.
+This site is automatically deployed to GitHub Pages via GitHub Actions.
+
+### Production Deployment
+
+Changes pushed to the `main` branch are automatically built and deployed to production at [aidanbevan.com](https://aidanbevan.com).
+
+### Feature Branch Deployments
+
+Feature branches (branches prefixed with `feature/` or `feat/`) are automatically built and deployed to a preview environment. This allows you to test changes before merging to main.
+
+**Supported branch patterns:**
+- `feature/*` - e.g., `feature/new-design`
+- `feat/*` - e.g., `feat/add-contact-form`
+
+**Pull Requests:**
+Pull requests targeting `main` will build the site (but not deploy) to validate the build succeeds.
 
 ### Custom Domain
 
