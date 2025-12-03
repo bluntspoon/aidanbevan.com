@@ -88,6 +88,13 @@
   </main>
   
   {% include footer.html %}
+
+  <!-- Back to Top Button -->
+  <button class="back-to-top" id="back-to-top" aria-label="Back to top">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 4l-8 8h5v8h6v-8h5z"/>
+    </svg>
+  </button>
   
   <!-- Certificate Modal -->
   <div id="certificate-modal" class="certificate-modal" aria-hidden="true">
@@ -102,6 +109,80 @@
   </div>
 
   <script>
+    // ==========================================================================
+    // HEADER SCROLL EFFECT
+    // ==========================================================================
+    var header = document.querySelector('.site-header');
+    var lastScroll = 0;
+
+    window.addEventListener('scroll', function() {
+      var currentScroll = window.pageYOffset;
+      
+      if (currentScroll > 50) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+      
+      lastScroll = currentScroll;
+    });
+
+    // ==========================================================================
+    // MOBILE NAVIGATION TOGGLE
+    // ==========================================================================
+    var navToggle = document.querySelector('.nav-toggle');
+    var siteNav = document.querySelector('.site-nav');
+    var navOverlay = document.querySelector('.nav-overlay');
+
+    function toggleNav() {
+      navToggle.classList.toggle('active');
+      siteNav.classList.toggle('active');
+      navOverlay.classList.toggle('active');
+      document.body.style.overflow = siteNav.classList.contains('active') ? 'hidden' : '';
+      navToggle.setAttribute('aria-expanded', siteNav.classList.contains('active'));
+    }
+
+    if (navToggle) {
+      navToggle.addEventListener('click', toggleNav);
+    }
+
+    if (navOverlay) {
+      navOverlay.addEventListener('click', toggleNav);
+    }
+
+    // Close nav when clicking a link
+    var navLinks = document.querySelectorAll('.site-nav a');
+    navLinks.forEach(function(link) {
+      link.addEventListener('click', function() {
+        if (siteNav.classList.contains('active')) {
+          toggleNav();
+        }
+      });
+    });
+
+    // ==========================================================================
+    // BACK TO TOP BUTTON
+    // ==========================================================================
+    var backToTop = document.getElementById('back-to-top');
+
+    window.addEventListener('scroll', function() {
+      if (window.pageYOffset > 300) {
+        backToTop.classList.add('visible');
+      } else {
+        backToTop.classList.remove('visible');
+      }
+    });
+
+    backToTop.addEventListener('click', function() {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+
+    // ==========================================================================
+    // CERTIFICATE MODAL
+    // ==========================================================================
     function openCertificateModal(imageUrl) {
       var modal = document.getElementById('certificate-modal');
       var image = document.getElementById('certificate-image');
@@ -123,6 +204,10 @@
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
         closeCertificateModal();
+        // Also close mobile nav if open
+        if (siteNav && siteNav.classList.contains('active')) {
+          toggleNav();
+        }
       }
     });
 
@@ -132,6 +217,28 @@
         var imageUrl = e.target.getAttribute('href');
         openCertificateModal(imageUrl);
       }
+    });
+
+    // ==========================================================================
+    // INTERSECTION OBSERVER FOR SCROLL ANIMATIONS
+    // ==========================================================================
+    var observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate-in');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+
+    // Observe elements that should animate on scroll
+    document.querySelectorAll('.card, .about-section, .testimonial').forEach(function(el) {
+      observer.observe(el);
     });
   </script>
 </body>

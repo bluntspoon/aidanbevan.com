@@ -4,6 +4,11 @@
       <img src="{{ '/assets/images/gymnast-small.png' | relative_url }}" alt="Logo" class="site-logo">
       <span>{{ site.title }}</span>
     </a>
+    <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
     <nav class="site-nav">
       <a href="{{ '/' | relative_url }}"{% if page.url == '/' %} class="active"{% endif %}>Home</a>
       <a href="{{ '/about/' | relative_url }}"{% if page.url == '/about/' %} class="active"{% endif %}>About</a>
@@ -11,3 +16,4 @@
     </nav>
   </div>
 </header>
+<div class="nav-overlay"></div>
