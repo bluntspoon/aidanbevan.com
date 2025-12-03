@@ -71,14 +71,14 @@ Aidan is deeply committed to inclusive gymnastics and works extensively with chi
   <div class="card">
     <h3 class="card-title">Gymnastics Leader</h3>
     <p class="card-text">Qualified as a Gymnastics Leader, demonstrating competence in leading and assisting with gymnastics activities in a safe and supportive environment.</p>
-    <a href="/assets/certificates/gymnastics-leader-certificate.pdf" class="card-link certificate-link">View Certificate →</a>
+    <a href="/assets/certificates/gymnastics-leader-certificate.jpg" class="card-link certificate-link">View Certificate →</a>
   </div>
   <div class="card">
     <h3 class="card-title">Safeguarding Certificate</h3>
     <p class="card-text">Completed Safeguarding training to ensure the safety and wellbeing of all young athletes, maintaining the highest standards of child protection.</p>
-    <a href="/assets/certificates/safeguarding-certificate-1.pdf" class="card-link certificate-link">View Certificate 1 →</a>
-    <a href="/assets/certificates/safeguarding-certificate-2.pdf" class="card-link certificate-link">View Certificate 2 →</a>
-    <a href="/assets/certificates/safeguarding-certificate-3.pdf" class="card-link certificate-link">View Certificate 3 →</a>
+    <a href="/assets/certificates/safeguarding-certificate-1.jpg" class="card-link certificate-link">View Certificate 1 →</a>
+    <a href="/assets/certificates/safeguarding-certificate-2.jpg" class="card-link certificate-link">View Certificate 2 →</a>
+    <a href="/assets/certificates/safeguarding-certificate-3.jpg" class="card-link certificate-link">View Certificate 3 →</a>
   </div>
 </div>
 

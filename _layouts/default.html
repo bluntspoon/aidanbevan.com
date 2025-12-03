@@ -96,16 +96,16 @@
       <button class="certificate-modal-close" onclick="closeCertificateModal()" aria-label="Close certificate viewer">&times;</button>
       <div class="certificate-viewer">
         <div class="certificate-watermark">COPY</div>
-        <iframe id="certificate-iframe" src="" title="Certificate Viewer"></iframe>
+        <img id="certificate-image" src="" alt="Certificate" class="certificate-image">
       </div>
     </div>
   </div>
 
   <script>
-    function openCertificateModal(pdfUrl) {
+    function openCertificateModal(imageUrl) {
       var modal = document.getElementById('certificate-modal');
-      var iframe = document.getElementById('certificate-iframe');
-      iframe.src = pdfUrl;
+      var image = document.getElementById('certificate-image');
+      image.src = imageUrl;
       modal.classList.add('active');
       modal.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
@@ -113,10 +113,10 @@
 
     function closeCertificateModal() {
       var modal = document.getElementById('certificate-modal');
-      var iframe = document.getElementById('certificate-iframe');
+      var image = document.getElementById('certificate-image');
       modal.classList.remove('active');
       modal.setAttribute('aria-hidden', 'true');
-      iframe.src = '';
+      image.src = '';
       document.body.style.overflow = '';
     }
 
@@ -129,7 +129,8 @@
     document.addEventListener('click', function(e) {
       if (e.target.classList.contains('certificate-link')) {
         e.preventDefault();
-        openCertificateModal(e.target.getAttribute('href'));
+        var imageUrl = e.target.getAttribute('href');
+        openCertificateModal(imageUrl);
       }
     });
   </script>
