@@ -202,37 +202,42 @@
     });
 
     // ==========================================================================
-    // PAGE TRANSITIONS (for internal links)
+    // PAGE TRANSITIONS (for internal links) - Using event delegation
     // ==========================================================================
     var pageTransition = document.getElementById('page-transition');
-    var internalLinks = document.querySelectorAll('a[href^="/"], a[href^="' + window.location.origin + '"]');
 
-    internalLinks.forEach(function(link) {
+    document.body.addEventListener('click', function(e) {
+      var link = e.target.closest('a');
+      if (!link) return;
+
+      var href = link.getAttribute('href');
+      if (!href) return;
+
+      // Only handle internal links
+      var isInternal = href.startsWith('/') || href.startsWith(window.location.origin);
+      if (!isInternal) return;
+
       // Skip links that should not trigger transition
       if (link.classList.contains('certificate-link') || 
           link.getAttribute('target') === '_blank' ||
-          link.getAttribute('href').startsWith('#') ||
-          link.getAttribute('href').includes('mailto:') ||
-          link.getAttribute('href').includes('tel:') ||
-          link.getAttribute('href').includes('wa.me')) {
+          href.startsWith('#') ||
+          href.includes('mailto:') ||
+          href.includes('tel:') ||
+          href.includes('wa.me')) {
         return;
       }
 
-      link.addEventListener('click', function(e) {
-        var href = this.getAttribute('href');
-        
-        // Don't transition if it's the same page
-        if (href === window.location.pathname) {
-          return;
-        }
+      // Don't transition if it's the same page
+      if (href === window.location.pathname) {
+        return;
+      }
 
-        e.preventDefault();
-        pageTransition.classList.add('active');
+      e.preventDefault();
+      pageTransition.classList.add('active');
         
-        setTimeout(function() {
-          window.location.href = href;
-        }, 500);
-      });
+      setTimeout(function() {
+        window.location.href = href;
+      }, 500);
     });
 
     // ==========================================================================

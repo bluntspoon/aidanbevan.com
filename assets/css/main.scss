@@ -1249,7 +1249,7 @@ $color-whatsapp-hover: #20bd5a;
 }
 
 @keyframes whatsappPulse {
-  0%, 100% {
+  0% {
     transform: translate(-50%, -50%) scale(0);
     opacity: 1;
   }
@@ -1396,6 +1396,7 @@ $color-whatsapp-hover: #20bd5a;
   .header-content {
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
   }
 
   .site-nav {
