@@ -12,6 +12,11 @@ social:
   name: Aidan Bevan
   links: []
 
+# WhatsApp
+whatsapp:
+  number: "+27646530036"
+  display: "+27 64 653 0036"
+
 # SEO Settings
 logo: /assets/images/gymnast.png
 locale: en_ZA
