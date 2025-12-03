@@ -81,17 +81,6 @@
   </script>
 </head>
 <body>
-  <!-- Preloader -->
-  <div class="preloader" id="preloader">
-    <div class="preloader-content">
-      <div class="preloader-spinner"></div>
-      <div class="preloader-text">Loading</div>
-    </div>
-  </div>
-
-  <!-- Page Transition Overlay -->
-  <div class="page-transition" id="page-transition"></div>
-
   {% include header.html %}
   
   <main class="page-content" aria-label="Content">
@@ -120,16 +109,6 @@
   </div>
 
   <script>
-    // ==========================================================================
-    // PRELOADER
-    // ==========================================================================
-    window.addEventListener('load', function() {
-      var preloader = document.getElementById('preloader');
-      setTimeout(function() {
-        preloader.classList.add('hidden');
-      }, 500);
-    });
-
     // ==========================================================================
     // HEADER SCROLL EFFECT
     // ==========================================================================
@@ -199,45 +178,6 @@
         top: 0,
         behavior: 'smooth'
       });
-    });
-
-    // ==========================================================================
-    // PAGE TRANSITIONS (for internal links) - Using event delegation
-    // ==========================================================================
-    var pageTransition = document.getElementById('page-transition');
-
-    document.body.addEventListener('click', function(e) {
-      var link = e.target.closest('a');
-      if (!link) return;
-
-      var href = link.getAttribute('href');
-      if (!href) return;
-
-      // Only handle internal links
-      var isInternal = href.startsWith('/') || href.startsWith(window.location.origin);
-      if (!isInternal) return;
-
-      // Skip links that should not trigger transition
-      if (link.classList.contains('certificate-link') || 
-          link.getAttribute('target') === '_blank' ||
-          href.startsWith('#') ||
-          href.includes('mailto:') ||
-          href.includes('tel:') ||
-          href.includes('wa.me')) {
-        return;
-      }
-
-      // Don't transition if it's the same page
-      if (href === window.location.pathname) {
-        return;
-      }
-
-      e.preventDefault();
-      pageTransition.classList.add('active');
-        
-      setTimeout(function() {
-        window.location.href = href;
-      }, 500);
     });
 
     // ==========================================================================
