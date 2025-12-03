@@ -88,5 +88,50 @@
   </main>
   
   {% include footer.html %}
+  
+  <!-- Certificate Modal -->
+  <div id="certificate-modal" class="certificate-modal" aria-hidden="true">
+    <div class="certificate-modal-overlay" onclick="closeCertificateModal()"></div>
+    <div class="certificate-modal-content">
+      <button class="certificate-modal-close" onclick="closeCertificateModal()" aria-label="Close certificate viewer">&times;</button>
+      <div class="certificate-viewer">
+        <div class="certificate-watermark">COPY</div>
+        <iframe id="certificate-iframe" src="" title="Certificate Viewer"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openCertificateModal(pdfUrl) {
+      var modal = document.getElementById('certificate-modal');
+      var iframe = document.getElementById('certificate-iframe');
+      iframe.src = pdfUrl;
+      modal.classList.add('active');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeCertificateModal() {
+      var modal = document.getElementById('certificate-modal');
+      var iframe = document.getElementById('certificate-iframe');
+      modal.classList.remove('active');
+      modal.setAttribute('aria-hidden', 'true');
+      iframe.src = '';
+      document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeCertificateModal();
+      }
+    });
+
+    document.addEventListener('click', function(e) {
+      if (e.target.classList.contains('certificate-link')) {
+        e.preventDefault();
+        openCertificateModal(e.target.getAttribute('href'));
+      }
+    });
+  </script>
 </body>
 </html>
