@@ -132,7 +132,8 @@ body {
       transition: width 0.3s ease;
     }
 
-    &:hover {
+    &:hover,
+    &.active {
       color: $color-text-white;
 
       &::after {
