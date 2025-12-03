@@ -65,6 +65,21 @@ Aidan is deeply committed to inclusive gymnastics and works extensively with chi
 
 ---
 
+## Certifications & Training
+
+<div class="card-grid">
+  <div class="card">
+    <h3 class="card-title">Gymnastics Leader</h3>
+    <p class="card-text">Qualified as a Gymnastics Leader, demonstrating competence in leading and assisting with gymnastics activities in a safe and supportive environment.</p>
+  </div>
+  <div class="card">
+    <h3 class="card-title">Safeguarding Certificate</h3>
+    <p class="card-text">Completed Safeguarding training to ensure the safety and wellbeing of all young athletes, maintaining the highest standards of child protection.</p>
+  </div>
+</div>
+
+---
+
 ## Coaching Approach
 
 With a coaching philosophy centered on building strong foundations, fostering confidence, and celebrating individual progress, Aidan creates training programs that are both challenging and enjoyable.
