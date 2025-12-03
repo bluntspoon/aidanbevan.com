@@ -18,7 +18,6 @@ description: Get in touch with Aidan Bevan for gymnastics coaching inquiries. Se
       </svg>
       Message me on WhatsApp
     </a>
-    <p class="whatsapp-number">{{ site.whatsapp.display }}</p>
   </div>
 
   <div class="contact-divider">
