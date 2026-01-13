@@ -113,4 +113,4 @@ Your content here...
 
 ## License
 
-All rights reserved © Aidan Bevan
+All rights reserved © 2026 Aidan Bevan
