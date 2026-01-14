@@ -80,6 +80,21 @@ The site is configured to use the custom domain `aidanbevan.com`. The `CNAME` fi
 2. Under **Source**, select **GitHub Actions**
 3. The site will be automatically built and deployed on each push to `main`
 
+### Google Analytics Setup
+
+The site includes Google Analytics tracking using gtag.js. To enable analytics:
+
+1. Open `_config.yml`
+2. Replace the placeholder `G-XXXXXXXXXX` with your actual Google Analytics Measurement ID
+3. Commit and deploy the change
+
+To obtain a Google Analytics Measurement ID:
+1. Go to [Google Analytics](https://analytics.google.com/)
+2. Create a new property or use an existing one
+3. Copy your Measurement ID (format: `G-XXXXXXXXXX`)
+
+The Google tag will automatically be included in all pages when a valid `google_analytics` ID is configured.
+
 ## Project Structure
 
 ```
