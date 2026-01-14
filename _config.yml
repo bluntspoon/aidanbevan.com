@@ -27,6 +27,9 @@ location:
   region: KwaZulu-Natal
   country: South Africa
 
+# Google Analytics
+google_analytics: G-J3ELKFT92T
+
 # Build settings
 markdown: kramdown
 
