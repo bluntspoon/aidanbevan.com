@@ -6,6 +6,10 @@ _site/
 Gemfile.lock
 vendor/
 
+# Car-dex worker
+worker/node_modules/
+worker/.wrangler/
+
 # IDE
 .idea/
 .vscode/
