@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Car-dex">
+  <rect width="512" height="512" rx="96" fill="#0d0d0d"/>
+  <path d="M96 300h320l-24-64a48 48 0 0 0-45-30H165a48 48 0 0 0-45 30l-24 64z" fill="#e63946"/>
+  <rect x="96" y="300" width="320" height="56" rx="18" fill="#ffffff"/>
+  <circle cx="160" cy="356" r="34" fill="#0d0d0d" stroke="#e63946" stroke-width="12"/>
+  <circle cx="352" cy="356" r="34" fill="#0d0d0d" stroke="#e63946" stroke-width="12"/>
+  <rect x="200" y="212" width="112" height="40" rx="10" fill="#0d0d0d"/>
+</svg>
