@@ -1,0 +1,11 @@
+{
+  "name": "Body Anvil",
+  "short_name": "Body Anvil",
+  "description": "Tap a muscle, get the exercises: sets, reps, rest and the mistake to avoid.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0d0b0b",
+  "theme_color": "#0d0b0b",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
