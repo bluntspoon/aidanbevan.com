@@ -1,6 +1,6 @@
 {
-  "name": "GainsAtlas",
-  "short_name": "GainsAtlas",
+  "name": "Gains Atlas",
+  "short_name": "Gains Atlas",
   "description": "Tap a muscle, get the exercises: sets, reps, rest and the mistake to avoid.",
   "start_url": "./",
   "scope": "./",
