@@ -23,9 +23,13 @@ function viewMap() {
   const total = MUSCLES.length;
   return `
     <section class="hero">
-      <p class="kicker">Tap a muscle · get the work</p>
-      <h1>Body <span>Anvil</span></h1>
-      <p class="lede">Press the part you want to grow. Every exercise for it is on the next screen, with sets, reps and the mistake to avoid.</p>
+      <div class="hero-photo" role="img" aria-label="A bodybuilder on stage, muscles under the lights"></div>
+      <div class="hero-copy">
+        <p class="kicker">Tap a muscle · get the work</p>
+        <h1>Gains<span>Atlas</span></h1>
+        <p class="lede">Press the part you want to grow. Every exercise for it is on the next screen: sets, reps, rest, and the mistake to avoid.</p>
+        <p class="hero-stat"><strong>89</strong> moves · <strong>16</strong> muscle groups · home or gym</p>
+      </div>
     </section>
 
     <div class="map-tabs" role="tablist" aria-label="Body view">

@@ -1,6 +1,6 @@
 {
-  "name": "Body Anvil",
-  "short_name": "Body Anvil",
+  "name": "GainsAtlas",
+  "short_name": "GainsAtlas",
   "description": "Tap a muscle, get the exercises: sets, reps, rest and the mistake to avoid.",
   "start_url": "./",
   "scope": "./",
