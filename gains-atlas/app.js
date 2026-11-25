@@ -26,7 +26,7 @@ function viewMap() {
       <div class="hero-photo" role="img" aria-label="A bodybuilder on stage, muscles under the lights"></div>
       <div class="hero-copy">
         <p class="kicker">Tap a muscle · get the work</p>
-        <h1>Gains<span>Atlas</span></h1>
+        <h1>Gains <span>Atlas</span></h1>
         <p class="lede">Press the part you want to grow. Every exercise for it is on the next screen: sets, reps, rest, and the mistake to avoid.</p>
         <p class="hero-stat"><strong>89</strong> moves · <strong>16</strong> muscle groups · home or gym</p>
       </div>
@@ -139,6 +139,17 @@ function wireMap() {
     const hit = target.closest('[data-muscle]');
     if (hit) openMuscle(hit.dataset.muscle);
   };
+  // Keep the figure on screen while the map is being used: on a phone the lower hotspots
+  // (forearms, quads) sit below the fold and a tap there used to land outside the viewport.
+  const keepInView = () => {
+    const map = el('map');
+    if (!map) return;
+    const rect = map.getBoundingClientRect();
+    if (rect.bottom > window.innerHeight - 80) {
+      map.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+  };
+  keepInView();
   map.addEventListener('click', (event) => pick(event.target));
   map.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' || event.key === ' ') {
