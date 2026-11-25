@@ -37,7 +37,33 @@ body { padding-bottom: env(safe-area-inset-bottom); }
 .wordmark { font-family: var(--font-head); font-weight: 800; letter-spacing: 0.16em; font-size: 0.95rem; margin: 0; flex: 1; }
 .wordmark span { color: var(--ember); }
 
-.hero { padding: 14px 0 10px; }
+.hero { position: relative; margin: -4px -16px 6px; }
+
+/* The photograph is the app's face: a physique under stage light, faded into the page so the
+   name and the map stay the things you look at. */
+.hero-photo {
+  position: relative;
+  height: clamp(300px, 52vh, 460px);
+  background: #0d0b0b url('img/hero.jpg') center 28% / cover no-repeat;
+  border-radius: 0 0 26px 26px;
+  overflow: hidden;
+}
+.hero-photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(13, 11, 11, 0.6) 0%, rgba(13, 11, 11, 0) 28%, rgba(13, 11, 11, 0.82) 66%, #0d0b0b 92%),
+    radial-gradient(120% 80% at 50% 20%, rgba(255, 90, 31, 0.18) 0%, transparent 60%);
+}
+
+.hero-copy { position: relative; margin-top: -96px; padding: 0 16px 4px; }
+.hero-copy h1 { margin-bottom: 10px; }
+.hero-stat {
+  font-family: var(--font-head); font-size: 0.78rem; letter-spacing: 0.06em;
+  color: var(--muted); margin: 14px 0 0;
+}
+.hero-stat strong { color: var(--steel); }
 .kicker { font-family: var(--font-head); font-size: 0.66rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ember-soft); margin: 0 0 8px; }
 .hero h1, .muscle-head h1 {
   font-family: var(--font-head); font-weight: 800; letter-spacing: -0.02em; margin: 0 0 8px;
@@ -46,7 +72,7 @@ body { padding-bottom: env(safe-area-inset-bottom); }
 .hero h1 span { color: var(--ember); }
 .lede { color: var(--muted); font-size: 0.95rem; line-height: 1.5; margin: 0 0 6px; max-width: 40ch; }
 
-.map-tabs { display: flex; gap: 8px; margin: 18px 0 8px; }
+.map-tabs { display: flex; gap: 8px; margin: 22px 0 10px; }
 .tab {
   flex: 1; min-height: 42px; border-radius: 10px; border: 1px solid var(--line);
   background: var(--card); color: var(--muted); font-family: var(--font-head); font-weight: 700;
