@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Body Anvil">
+  <rect width="512" height="512" rx="104" fill="#0d0b0b"/>
+  <path d="M120 196h170l46 40h56a28 28 0 0 1 28 28v44a28 28 0 0 1-28 28h-74l-30-30H120z" fill="#ff5a1f"/>
+  <rect x="120" y="196" width="40" height="110" rx="12" fill="#e8e2dc"/>
+  <rect x="200" y="330" width="112" height="46" rx="14" fill="#3a3232"/>
+  <rect x="236" y="376" width="40" height="42" rx="10" fill="#3a3232"/>
+  <rect x="196" y="418" width="120" height="22" rx="11" fill="#e8e2dc"/>
+</svg>
