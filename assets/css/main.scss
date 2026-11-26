@@ -745,6 +745,119 @@ $color-gains-ember: #ff5a1f; // the app's own accent, so the card reads as the a
 }
 
 // =============================================================================
+// HOME: GAINS ATLAS SIDE TAB (homepage only, fades out while .home-app is on screen)
+// =============================================================================
+$home-tab-width: 44px;
+
+@keyframes homeTabIn {
+  from {
+    opacity: 0;
+    transform: translate(3px, -50%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
+}
+
+.home-tab {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  z-index: 990; // under the mobile nav overlay (999) and the header (1000)
+  transform: translateY(-50%);
+  box-sizing: border-box;
+  width: calc(#{$home-tab-width} + env(safe-area-inset-right, 0px));
+  min-height: 120px;
+  max-height: 148px;
+  padding: 10px env(safe-area-inset-right, 0px) 10px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: $color-accent-red;
+  color: $color-text-white;
+  border-radius: 8px 0 0 8px;
+  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.35);
+  font-family: $font-heading;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 14px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: opacity 0.3s ease, visibility 0s linear 0s, background 0.2s ease;
+  animation: homeTabIn 0.5s ease-out 1.2s backwards;
+
+  &.is-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.3s ease, visibility 0s linear 0.3s, background 0.2s ease;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      background: $color-accent-red-dark;
+    }
+  }
+
+  &:active {
+    background: $color-accent-red-dark;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-text-white;
+    outline-offset: -5px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    transition: none;
+
+    &.is-hidden {
+      transition: none;
+    }
+  }
+
+  // A short landscape phone has no room between the header and the bottom edge.
+  @media (max-height: 320px) {
+    display: none;
+  }
+
+  @media print {
+    display: none;
+  }
+}
+
+.home-tab-chevron {
+  flex: none;
+  width: 10px;
+  height: 10px;
+}
+
+// Two columns of vertical text read bottom-to-top: "Free" then "Gains Atlas".
+.home-tab-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+}
+
+.home-tab-free {
+  opacity: 0.85;
+}
+
+// Keep the hero slogan and paragraph out from under the tab on narrow screens
+// (28px on top of the hero's own side padding clears the 44px tab with room to spare).
+.hero-slogan,
+.hero-description {
+  @media (max-width: 860px) {
+    padding: 0 28px;
+  }
+}
+
+// =============================================================================
 // BUTTONS
 // =============================================================================
 .btn {
