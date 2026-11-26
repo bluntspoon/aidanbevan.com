@@ -78,9 +78,9 @@ const DETAILS_BACK = `${KNUCKLES} ${both('M80.8 361.4 C 83.8 360.2, 88 360.2, 91
 const defs = (silhouette) => `
   <defs>
     <linearGradient id="ga-skin" gradientUnits="userSpaceOnUse" x1="40" y1="0" x2="170" y2="380">
-      <stop offset="0" stop-color="#5c4b42"/>
-      <stop offset="0.5" stop-color="#463931"/>
-      <stop offset="1" stop-color="#342a24"/>
+      <stop offset="0" stop-color="#6b584c"/>
+      <stop offset="0.5" stop-color="#514237"/>
+      <stop offset="1" stop-color="#3c312a"/>
     </linearGradient>
     <!-- solid ember with a white highlight (0.35 -> 0) baked in, top-left of each shape -->
     <radialGradient id="ga-lit" cx="0.35" cy="0.25" r="0.75">
@@ -102,6 +102,16 @@ const defs = (silhouette) => `
     <mask id="ga-inner" maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="380">
       <g filter="url(#ga-erode)">${silhouette.map((d) => `<path d="${d}" fill="#fff"/>`).join('')}</g>
     </mask>
+    <!-- one highlight per muscle belly: objectBoundingBox, so it lights the top-left of any shape -->
+    <linearGradient id="ga-belly" x1="0.15" y1="0" x2="0.75" y2="1">
+      <stop offset="0" stop-color="#ffe6d2" stop-opacity="0.16"/>
+      <stop offset="0.42" stop-color="#ffd0b0" stop-opacity="0.05"/>
+      <stop offset="0.72" stop-color="#000" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.26"/>
+    </linearGradient>
+    <filter id="ga-soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="0.9"/>
+    </filter>
     <filter id="ga-form" x="-30%" y="-30%" width="160%" height="160%">
       <feGaussianBlur stdDeviation="2.5"/>
     </filter>
@@ -120,9 +130,16 @@ const shade = (opacity, d) => `<path d="${d}" fill="#000" fill-opacity="${opacit
 // space; both views share it, so switching never changes the scale.
 export const VIEWBOX = { x: 38, y: 8, width: 124, height: 370 };
 
-const figure = ({ label, silhouette, forms, details, hotspots }) => {
+const figure = ({ label, silhouette, forms, lines, details, hotspots }) => {
   // The grooves are the edges of the tappable groups, so the carving and the targets always agree.
-  const grooves = [...hotspots.matchAll(/ d="([^"]+)"/g)].map((m) => m[1]).join(' ');
+  const shapes = [...hotspots.matchAll(/ d="([^"]+)"/g)].map((m) => m[1]);
+  const grooves = shapes.join(' ');
+  // Every muscle belly is shaded three times, in the anatomy layer only: a highlight from the
+  // upper left, a soft dark edge along the lower right, and a hairline light edge on top. The
+  // interactive hotspots sit above this and never carry paint of their own at rest.
+  // A belly is lit from the upper left and falls into shadow at its lower edge. Filling, never
+  // stroking: a closed outline around every muscle is what made the figure read as armour plating.
+  const bellies = shapes.map((d) => `<path d="${d}" fill="url(#ga-belly)"/>`).join('');
   return `
 <svg viewBox="${VIEWBOX.x} ${VIEWBOX.y} ${VIEWBOX.width} ${VIEWBOX.height}" class="figure" aria-label="${label}">${defs(silhouette)}
   <ellipse class="floor" cx="100" cy="371" rx="60" ry="7" fill="url(#ga-pool)"/>
@@ -130,13 +147,45 @@ const figure = ({ label, silhouette, forms, details, hotspots }) => {
   <g class="anatomy">
     ${silhouette.map((d) => `<path class="skin" d="${d}" fill="url(#ga-skin)"/>`).join('')}
     <g class="forms" clip-path="url(#ga-clip)" filter="url(#ga-form)">${forms}</g>
-    <path class="grooves" d="${grooves}" mask="url(#ga-inner)"/>
+    <g class="bellies" clip-path="url(#ga-clip)">${bellies}</g>
+    <path class="lines hi" d="${lines}" clip-path="url(#ga-clip)" transform="translate(-0.4 -0.4)"/>
+    <path class="lines" d="${lines}" clip-path="url(#ga-clip)"/>
     <path class="grooves details" d="${details}"/>
     <path class="rim" d="${RIM}" clip-path="url(#ga-clip)"/>
   </g>
   <g class="hotspots">${hotspots}</g>
 </svg>`;
 };
+
+
+const FRONT_LINES = [
+  // clavicles and the sternum groove
+  'M100 70 C 94 67.6, 86 67.4, 79.6 69.6',
+  'M100 70 C 106 67.6, 114 67.4, 120.4 69.6',
+  'M100 71 L 100 99',
+  // linea alba, then the creases of the rectus abdominis
+  'M100 103 L 100 186',
+  'M88.4 121 C 94 123.4, 106 123.4, 111.6 121',
+  'M87.4 141 C 94 143.6, 106 143.6, 112.6 141',
+  'M86.4 160 C 94 162.6, 106 162.6, 113.6 160',
+  // serratus ticks under the pec, on the side of the ribs
+  'M73.4 112 L 77.4 115',
+  'M72.6 119 L 76.8 122',
+  'M72.2 126 L 76.4 129',
+  // where the deltoid meets the chest and the arm
+  'M73 73 C 75 82, 75 90, 72.6 97',
+  'M56.6 100 C 55.6 112, 54.6 124, 53.4 133',
+  'M52.6 145 C 55.6 147.4, 58.6 147.4, 60.4 146',
+  // rectus femoris, the vastus medialis teardrop and the patella
+  'M78 196 C 80.4 220, 79.6 246, 76.4 266',
+  'M86.4 244 C 88.6 256, 86.6 267, 82 273.6',
+  'M77.6 274 C 81 270.6, 86.4 271.6, 88.6 275.6 C 90 280.6, 85.6 285, 81.4 284.6 C 77.4 284.2, 75.4 279.4, 77.6 274',
+  // the shin bone and the medial calf
+  'M78.6 291 L 78.6 344',
+  'M78 299 C 80.4 315, 79.6 331, 77.4 343',
+  // belly of the hand: the knuckle line
+  'M46.2 210.6 C 48.6 212.2, 52.4 212.2, 54.6 210.8',
+].join(' ');
 
 /* ------------------------------------------------------------------- front */
 
@@ -172,9 +221,41 @@ export const FRONT_FIGURE = figure({
   label: 'Front of the body: tap a body part',
   silhouette: SIL_FRONT,
   forms: FRONT_FORMS,
+  lines: FRONT_LINES,
   details: DETAILS_FRONT,
   hotspots: FRONT_HOTSPOTS,
 });
+
+
+const BACK_LINES = [
+  // the spine, and the shoulder blades either side of it
+  'M100 62 C 99 100, 99 142, 100 182',
+  'M74 82 C 80 92, 86 96.4, 92.4 96.6',
+  'M126 82 C 120 92, 114 96.4, 107.6 96.6',
+  'M76 92 C 82 99, 88 102, 93 102',
+  'M124 92 C 118 99, 112 102, 107 102',
+  // the outer edge of the lat, and the erectors beside the spine
+  'M84 104 C 80 124, 76.4 144, 74.6 160',
+  'M116 104 C 120 124, 123.6 144, 125.4 160',
+  'M93.4 122 C 92.4 142, 92 162, 93.4 178',
+  'M106.6 122 C 107.6 142, 108 162, 106.6 178',
+  // the split in the triceps, and the elbow
+  'M56.6 100 C 55.6 112, 54.6 124, 53.4 133',
+  'M52.6 145 C 55.6 147.4, 58.6 147.4, 60.4 146',
+  'M143.4 100 C 144.4 112, 145.4 124, 146.6 133',
+  'M147.4 145 C 144.4 147.4, 141.4 147.4, 139.6 146',
+  // the glute cleft and its lower fold
+  'M100 186 L 100 220',
+  'M86 219 C 92 222.4, 108 222.4, 114 219',
+  // the two heads of the hamstring, and the one that splits the calf
+  'M78.4 230 C 80.4 250, 79.4 266, 77.4 274',
+  'M121.6 230 C 119.6 250, 120.6 266, 122.6 274',
+  'M80.4 288 C 82.4 306, 82 326, 80 340',
+  'M119.6 288 C 117.6 306, 118 326, 120 340',
+  // the Achilles
+  'M81.6 344 L 81.6 360',
+  'M118.4 344 L 118.4 360',
+].join(' ');
 
 /* -------------------------------------------------------------------- back */
 
@@ -211,6 +292,7 @@ export const BACK_FIGURE = figure({
   label: 'Back of the body: tap a body part',
   silhouette: SIL_BACK,
   forms: BACK_FORMS,
+  lines: BACK_LINES,
   details: DETAILS_BACK,
   hotspots: BACK_HOTSPOTS,
 });
