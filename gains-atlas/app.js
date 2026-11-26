@@ -2,6 +2,7 @@
 import { MUSCLES, BY_MUSCLE } from './muscles.js';
 import { EXERCISES, EQUIPMENT_LABEL, exercisesFor } from './exercises.js';
 import { FRONT_FIGURE, BACK_FIGURE, VIEWBOX } from './body-map.js';
+import { diagramFor } from './diagram.js';
 
 const state = {
   muscle: null,
@@ -148,6 +149,10 @@ const LEVEL_STEPS = { beginner: 1, intermediate: 2, advanced: 3 };
 const levelBars = (level) => `<span class="level" aria-hidden="true">${[1, 2, 3]
   .map((step) => `<i${step <= LEVEL_STEPS[level] ? ' class="on"' : ''}></i>`).join('')}</span>`;
 
+function stepsList(steps) {
+  return `<ol class="ex-steps">${steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>`;
+}
+
 function exerciseRow(exercise, index) {
   const secondary = exercise.secondary.map((id) => BY_MUSCLE[id]?.name).filter(Boolean);
   const meta = [capital(exercise.level), EQUIPMENT_LABEL[exercise.equipment], exercise.place === 'home' ? 'Home' : 'Gym'].join(' · ');
@@ -163,7 +168,12 @@ function exerciseRow(exercise, index) {
           <span class="ex-dose"><b>${escapeHtml(exercise.sets)}</b><span class="x"> × </span><b>${escapeHtml(exercise.reps)}</b><span class="rest"> · ${escapeHtml(exercise.rest)} rest</span></span>
         </summary>
         <div class="ex-body">
-          <p class="ex-how"><strong>How</strong>${escapeHtml(exercise.cue)}</p>
+          <div class="ex-quarter">
+            <figure class="ex-diagram" aria-label="How to do a ${escapeHtml(exercise.name)}, start and end position">${diagramFor(exercise)}</figure>
+            <p class="ex-cue"><strong>Remember</strong>${escapeHtml(exercise.cue)}</p>
+          </div>
+          <p class="overline ex-steps-title">Step by step</p>
+          ${stepsList(exercise.steps)}
           <p class="ex-avoid"><strong>${ICON_WARN}Avoid</strong>${escapeHtml(exercise.avoid)}</p>
           ${secondary.length ? `<p class="ex-secondary">Also works ${secondary.map(escapeHtml).join(', ')}</p>` : ''}
         </div>
