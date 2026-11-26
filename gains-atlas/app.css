@@ -351,6 +351,45 @@ details[open] .ex-toggle svg { transform: rotate(180deg); }
   display: flex; align-items: center; gap: 6px;
   font-size: 13px; line-height: 18px; font-weight: 600; color: var(--text-2);
 }
+
+/* the how-to: a diagram and the one cue that matters, side by side above the steps */
+.ex-quarter { display: flex; align-items: center; gap: 14px; }
+.ex-diagram {
+  flex: none; width: 108px; aspect-ratio: 1; margin: 0;
+  border-radius: 12px; background: radial-gradient(120% 120% at 30% 20%, #1d1917, #0f0d0c);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  display: grid; place-items: center; overflow: hidden;
+}
+.ex-diagram .diagram-svg { width: 100%; height: 100%; display: block; }
+.ex-diagram .limb { fill: none; stroke: #e8e2dc; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.ex-diagram .limb.ghost { opacity: 0.28; }
+.ex-diagram .head { fill: none; stroke: #e8e2dc; stroke-width: 2.5; }
+.ex-diagram .head.ghost { opacity: 0.28; }
+.ex-diagram .joint { fill: var(--ember); }
+.ex-diagram .eq { fill: none; stroke: var(--ember); stroke-width: 2; opacity: 0.55; }
+.ex-diagram .eq-block { fill: var(--ember); opacity: 0.55; }
+.ex-diagram .eq-fill { fill: var(--ember); opacity: 0.28; stroke: var(--ember); stroke-width: 1.5; }
+.ex-diagram .eq-line { fill: none; stroke: var(--ember); stroke-width: 2; stroke-linejoin: round; opacity: 0.55; }
+.ex-diagram .rail { stroke: var(--ember); stroke-width: 2; opacity: 0.45; }
+.ex-diagram .floor, .ex-diagram .ground { stroke: var(--ember); stroke-width: 1.5; opacity: 0.3; }
+.ex-diagram .arrow { fill: none; stroke: var(--ember); stroke-width: 2; stroke-linecap: round; opacity: 0.6; }
+.ex-diagram .arrow-head { fill: var(--ember); opacity: 0.6; }
+.ex-cue { margin: 0; font-size: 14px; line-height: 20px; color: var(--text); }
+.ex-cue strong { margin-bottom: 2px; }
+
+.ex-steps-title { margin: 2px 0 -4px; }
+.ex-steps { margin: 0; padding: 0; list-style: none; counter-reset: ex-step; display: grid; gap: 8px; }
+.ex-steps li {
+  counter-increment: ex-step; position: relative;
+  padding-left: 30px; font-size: 15px; line-height: 21px; color: var(--text);
+}
+.ex-steps li::before {
+  content: counter(ex-step); position: absolute; left: 0; top: 0;
+  width: 21px; height: 21px; border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 12px; font-weight: 700; color: #0d0b0b; background: var(--text-2);
+}
+
 .ex-avoid { border-left: 2px solid var(--ember); padding-left: 12px; }
 .ex-avoid strong { color: var(--text); }
 .ex-avoid svg { width: 14px; height: 14px; color: var(--ember); }

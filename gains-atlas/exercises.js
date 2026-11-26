@@ -1,8 +1,7 @@
 // The exercise list. Every entry has enough to actually train from: sets and reps, rest, a cue
-// to get the movement right, and the mistake that wastes the set.
+// to get the movement right, the mistake that wastes the set, and step-by-step how-to copy.
 
-
-
+import { STEPS } from './steps.js';
 
 // Columns: id, name, primary, secondary, equipment, place, level, sets, reps, rest, cue, avoid
 
@@ -204,6 +203,7 @@ export const EXERCISES = ROWS.map((row) => ({
   rest: row[9],
   cue: row[10],
   avoid: row[11],
+  steps: STEPS[row[0]] ?? [],
 }));
 
 export const EQUIPMENT_LABEL = {
