@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Gains Atlas — tap a body part, get the work</title>
   <link rel="canonical" href="https://aidanbevan.com/gains-atlas/">
-  <meta name="description" content="A bodybuilding atlas: tap the body part you want to train and every exercise for it is listed with sets, reps, rest, how to do it and what to avoid.">
+  <meta name="description" content="A free gym aid for building specific muscles: tap the body part you want to train and get every movement for it, with sets, reps, rest, step-by-step form and the mistake to avoid. Works offline once installed.">
   <meta name="theme-color" content="#0d0b0b">
   <meta name="color-scheme" content="dark">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -21,9 +21,124 @@
 <body>
   <header class="topbar">
     <p class="wordmark">Gains Atlas</p>
+    <button class="topbar-install" id="open-install" type="button" aria-haspopup="dialog">Install</button>
   </header>
   <main class="shell" id="app"><p class="lede">Loading…</p></main>
   <noscript><p class="shell">Gains Atlas needs JavaScript.</p></noscript>
+
+  <footer class="site-foot">
+    <p>Made by Aidan Bevan — more at <a href="https://aidanbevan.com/">aidanbevan.com</a></p>
+  </footer>
+
+  <dialog class="sheet" id="welcome" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+    <div class="sheet-body" id="welcome-body">
+      <p class="overline">Welcome to</p>
+      <h2 class="sheet-title" id="welcome-title">Gains Atlas</h2>
+      <p class="sheet-lede">A gym aid for building specific muscles. Tap a body part, get every movement for it with the sets, reps, rest, and the mistake to avoid.</p>
+      <p class="sheet-note">It is a reference, not a coach: it won't write your programme or check your form.</p>
+
+      <h3 class="sheet-h">How it works</h3>
+      <ol class="sheet-steps">
+        <li>Tap a muscle on the body. Switch Front/Back for the other side.</li>
+        <li>Pick a movement. Open it for the step-by-step and the illustration.</li>
+        <li>Filter by anywhere, home or gym, and by the kit you actually have.</li>
+      </ol>
+      <p class="sheet-count"><b data-count="muscles">23</b> body parts, <b data-count="moves">138</b> movements — including the joints and grip work people forget.</p>
+
+      <section class="sheet-install" id="install" aria-labelledby="install-title">
+        <h3 class="sheet-h" id="install-title">Install it as an app</h3>
+        <p>Gains Atlas is a web app. It installs to your home screen and works offline after the first load. No app store, no account.</p>
+        <p class="install-done" id="install-done" hidden>You're using the installed app. Nothing more to do.</p>
+        <button class="btn btn-quiet" id="install-btn" type="button" hidden>Add to home screen</button>
+        <ul class="install-how" id="install-how">
+          <li data-platform="android"><b>Android, Chrome:</b> tap the ⋮ menu, then “Add to Home screen”.</li>
+          <li data-platform="ios"><b>iPhone or iPad:</b> it must be Safari, not Chrome. Tap Share, then “Add to Home Screen”.</li>
+        </ul>
+      </section>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn btn-ember" id="welcome-start" type="button">Start training</button>
+    </div>
+  </dialog>
+
+  <script type="module">
+    // The welcome sheet and the install offer. Kept out of app.js so the atlas itself stays as it was.
+    import { MUSCLES } from './muscles.js';
+    import { EXERCISES } from './exercises.js';
+
+    const WELCOME_KEY = 'ga.welcomed.v2';
+    const $ = (id) => document.getElementById(id);
+    const sheet = $('welcome');
+    const start = $('welcome-start');
+    const trigger = $('open-install');
+    const installBtn = $('install-btn');
+    const how = $('install-how');
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+    const installed = () => window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone === true;
+    let deferred = null;
+
+    // Counted from the data, like every other number in the atlas.
+    document.querySelector('[data-count="muscles"]').textContent = MUSCLES.length;
+    document.querySelector('[data-count="moves"]').textContent = EXERCISES.length;
+    // The instructions for this phone go first.
+    if (isIOS) how.prepend(how.querySelector('[data-platform="ios"]'));
+
+    function renderInstall() {
+      const done = installed();
+      $('install-done').hidden = !done;
+      installBtn.hidden = done || !deferred;
+      how.hidden = done || Boolean(deferred);
+      trigger.textContent = done ? 'About' : 'Install';
+    }
+
+    // Chrome and Edge offer a real install prompt; keep it for the button instead of the browser's banner.
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      deferred = event;
+      renderInstall();
+    });
+    window.addEventListener('appinstalled', () => { deferred = null; renderInstall(); });
+
+    installBtn.addEventListener('click', async () => {
+      if (!deferred) return;
+      const offer = deferred;
+      deferred = null; // a prompt can only be used once
+      offer.prompt();
+      try { await offer.userChoice; } catch { /* the browser dropped the prompt */ }
+      renderInstall();
+    });
+
+    let returnTo = null;
+    function open({ toInstall = false } = {}) {
+      renderInstall();
+      start.textContent = toInstall ? 'Back to the atlas' : 'Start training';
+      document.documentElement.classList.add('welcome-open');
+      sheet.showModal();
+      $('welcome-body').scrollTop = toInstall ? $('install').offsetTop - 8 : 0;
+      start.focus();
+    }
+
+    sheet.addEventListener('close', () => {
+      document.documentElement.classList.remove('welcome-open');
+      try { localStorage.setItem(WELCOME_KEY, '1'); } catch { /* storage blocked: nothing to remember with */ }
+      window.dispatchEvent(new Event('ga:welcome-closed'));
+      returnTo?.focus();
+      returnTo = null;
+    });
+    start.addEventListener('click', () => sheet.close());
+    // A tap on the dimmed page around the sheet lands on the <dialog> itself. Esc is the dialog's own cancel.
+    sheet.addEventListener('click', (event) => { if (event.target === sheet) sheet.close(); });
+    trigger.addEventListener('click', () => {
+      returnTo = trigger;
+      open({ toInstall: !installed() });
+    });
+
+    renderInstall();
+    let seen = true;
+    try { seen = Boolean(localStorage.getItem(WELCOME_KEY)); } catch { /* storage blocked: don't nag every visit */ }
+    if (!seen && !installed()) open();
+  </script>
   <script type="module" src="app.js"></script>
 </body>
 </html>
