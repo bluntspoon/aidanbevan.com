@@ -112,7 +112,7 @@
     let returnTo = null;
     function open({ toInstall = false } = {}) {
       renderInstall();
-      start.textContent = 'Back to the atlas';
+      start.textContent = toInstall ? 'Back to the atlas' : 'Open the atlas';
       document.documentElement.classList.add('welcome-open');
       sheet.showModal();
       $('welcome-body').scrollTop = toInstall ? $('install').offsetTop - 8 : 0;
