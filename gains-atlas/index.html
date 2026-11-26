@@ -57,7 +57,7 @@
       </section>
     </div>
     <div class="sheet-foot">
-      <button class="btn btn-ember" id="welcome-start" type="button">Start training</button>
+      <button class="btn btn-ember" id="welcome-start" type="button">Open the atlas</button>
     </div>
   </dialog>
 
@@ -112,7 +112,7 @@
     let returnTo = null;
     function open({ toInstall = false } = {}) {
       renderInstall();
-      start.textContent = toInstall ? 'Back to the atlas' : 'Start training';
+      start.textContent = 'Back to the atlas';
       document.documentElement.classList.add('welcome-open');
       sheet.showModal();
       $('welcome-body').scrollTop = toInstall ? $('install').offsetTop - 8 : 0;
