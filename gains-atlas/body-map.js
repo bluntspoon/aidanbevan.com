@@ -130,7 +130,248 @@ const shade = (opacity, d) => `<path d="${d}" fill="#000" fill-opacity="${opacit
 // space; both views share it, so switching never changes the scale.
 export const VIEWBOX = { x: 38, y: 8, width: 124, height: 370 };
 
-const figure = ({ label, silhouette, forms, lines, details, hotspots }) => {
+/* --------------------------------------------------------------- hit areas */
+
+// A fingertip is ~9 mm, a gloved one ~14 mm: wider than most drawn groups at phone size. So every
+// hotspot gets an invisible hit area under it, a transparent stroked copy of its own outline
+// (`.hit` in app.css: pointer-events: stroke). The stroke is at least HALO_MIN user units wide and,
+// where it can be, 0.6x the group's own width, so the group plus its halo is 1.6x as wide as drawn.
+//
+// Where two groups sit close, their halos would overlap and whichever was painted last would win
+// the gap. Instead each halo is clipped to a polygon that stops halfway to every neighbour (less a
+// hairline SEAM), so the two halos meet along the midline and never overlap. Proof sketch: a clip
+// point q sits r <= d/2 - SEAM out from its own outline point p, where d is p's distance to the
+// neighbour; so dist(q, own) <= r < d - r <= dist(q, neighbour). test/app.test.js samples it.
+
+const HALO_MIN = 14;
+const HALO_MAX = 20;
+const SEAM = 0.4;
+const STEP = 1; // outline sampling, user units
+
+const NUMBER = /[MLCZ]|-?\d+(?:\.\d+)?/g;
+
+/** A path (absolute M/L/C/Z only, as everything here is) as closed rings of points <= STEP apart. */
+export function flatten(d) {
+  const tokens = d.match(NUMBER) ?? [];
+  const rings = [];
+  let ring = [];
+  let cmd = 'M';
+  let at = 0;
+  let x = 0;
+  let y = 0;
+  const next = () => Number(tokens[at++]);
+  const close = () => { if (ring.length > 2) rings.push(ring); ring = []; };
+  while (at < tokens.length) {
+    if (/[MLCZ]/.test(tokens[at])) {
+      cmd = tokens[at++];
+      if (cmd === 'Z') { close(); continue; }
+    }
+    if (cmd === 'M') {
+      close();
+      x = next(); y = next();
+      ring.push([x, y]);
+      cmd = 'L';
+    } else if (cmd === 'L') {
+      x = next(); y = next();
+      ring.push([x, y]);
+    } else if (cmd === 'C') {
+      const c = [next(), next(), next(), next(), next(), next()];
+      for (let s = 1; s <= 8; s += 1) {
+        const t = s / 8;
+        const u = 1 - t;
+        ring.push([
+          u * u * u * x + 3 * u * u * t * c[0] + 3 * u * t * t * c[2] + t * t * t * c[4],
+          u * u * u * y + 3 * u * u * t * c[1] + 3 * u * t * t * c[3] + t * t * t * c[5],
+        ]);
+      }
+      x = c[4]; y = c[5];
+    } else {
+      at += 1;
+    }
+  }
+  close();
+  return rings.map(densify);
+}
+
+function densify(ring) {
+  const out = [];
+  const n = ring.length;
+  const last = ring[n - 1];
+  const closed = Math.hypot(last[0] - ring[0][0], last[1] - ring[0][1]) < 1e-6 ? n - 1 : n;
+  for (let i = 0; i < closed; i += 1) {
+    const a = ring[i];
+    const b = ring[(i + 1) % closed];
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    if (len < 1e-6) continue;
+    const parts = Math.max(1, Math.ceil(len / STEP));
+    for (let k = 0; k < parts; k += 1) out.push([a[0] + ((b[0] - a[0]) * k) / parts, a[1] + ((b[1] - a[1]) * k) / parts]);
+  }
+  return out;
+}
+
+/** Shortest distance from a point to a closed ring's outline. */
+export function ringDistance(p, ring) {
+  let best = Infinity;
+  const [px, py] = p;
+  for (let i = 0; i < ring.length; i += 1) {
+    const a = ring[i];
+    const b = ring[(i + 1) % ring.length];
+    const dx = b[0] - a[0];
+    const dy = b[1] - a[1];
+    const len2 = dx * dx + dy * dy;
+    let t = len2 ? ((px - a[0]) * dx + (py - a[1]) * dy) / len2 : 0;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    const ex = px - a[0] - t * dx;
+    const ey = py - a[1] - t * dy;
+    const d2 = ex * ex + ey * ey;
+    if (d2 < best) best = d2;
+  }
+  return Math.sqrt(best);
+}
+
+// The outline in runs of 12 points, each with its box, so a distance query skips the far runs.
+const RUN = 12;
+function runsOf(ring) {
+  const runs = [];
+  for (let from = 0; from < ring.length; from += RUN) {
+    const pts = ring.slice(from, Math.min(ring.length, from + RUN) + 1);
+    if (from + RUN >= ring.length) pts.push(ring[0]);
+    runs.push({ pts, box: boxOf(pts) });
+  }
+  return runs;
+}
+
+/** Distance from p to an item's outline, or `cap` if it is at least that far. */
+function nearDistance(p, item, cap) {
+  let best = cap * cap;
+  const [px, py] = p;
+  for (const { pts, box } of item.runs) {
+    const gx = Math.max(0, box.x0 - px, px - box.x1);
+    const gy = Math.max(0, box.y0 - py, py - box.y1);
+    if (gx * gx + gy * gy >= best) continue;
+    for (let i = 0; i + 1 < pts.length; i += 1) {
+      const a = pts[i];
+      const b = pts[i + 1];
+      const dx = b[0] - a[0];
+      const dy = b[1] - a[1];
+      const len2 = dx * dx + dy * dy;
+      let t = len2 ? ((px - a[0]) * dx + (py - a[1]) * dy) / len2 : 0;
+      t = t < 0 ? 0 : t > 1 ? 1 : t;
+      const ex = px - a[0] - t * dx;
+      const ey = py - a[1] - t * dy;
+      const d2 = ex * ex + ey * ey;
+      if (d2 < best) best = d2;
+    }
+  }
+  return Math.sqrt(best);
+}
+
+const boxOf = (ring) => {
+  const xs = ring.map((p) => p[0]);
+  const ys = ring.map((p) => p[1]);
+  return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
+};
+const boxGap = (a, b) => Math.hypot(Math.max(0, a.x0 - b.x1, b.x0 - a.x1), Math.max(0, a.y0 - b.y1, b.y0 - a.y1));
+const signedArea = (ring) => ring.reduce((sum, p, i) => {
+  const q = ring[(i + 1) % ring.length];
+  return sum + p[0] * q[1] - q[0] * p[1];
+}, 0) / 2;
+
+/** Drop points that sit within `tolerance` of the line through their neighbours (Douglas-Peucker). */
+function simplify(points, tolerance) {
+  if (points.length < 3) return points;
+  const keep = new Uint8Array(points.length);
+  keep[0] = 1;
+  keep[points.length - 1] = 1;
+  const stack = [[0, points.length - 1]];
+  while (stack.length) {
+    const [from, to] = stack.pop();
+    const [ax, ay] = points[from];
+    const [bx, by] = points[to];
+    const len = Math.hypot(bx - ax, by - ay) || 1;
+    let worst = 0;
+    let at = -1;
+    for (let i = from + 1; i < to; i += 1) {
+      const d = Math.abs((bx - ax) * (ay - points[i][1]) - (ax - points[i][0]) * (by - ay)) / len;
+      if (d > worst) { worst = d; at = i; }
+    }
+    if (worst > tolerance) {
+      keep[at] = 1;
+      stack.push([from, at], [at, to]);
+    }
+  }
+  return points.filter((_, i) => keep[i]);
+}
+
+/**
+ * Hit areas for one figure's hotspots: the halo width and the clip polygon for each, plus the
+ * outline itself (also used by the map's nearest-group fallback).
+ */
+export function hitAreas(hotspots) {
+  const items = hotspots.map(({ id, d }) => {
+    const ring = flatten(d)[0];
+    const box = boxOf(ring);
+    const width = Math.round(Math.max(HALO_MIN, Math.min(HALO_MAX, 0.6 * (box.x1 - box.x0))) * 10) / 10;
+    return { id, d, ring, box, width, runs: runsOf(ring) };
+  });
+  for (const item of items) {
+    const near = items.filter((other) => other.id !== item.id
+      && boxGap(item.box, other.box) < (item.width + other.width) / 2 + 2);
+    const ring = item.ring;
+    const n = ring.length;
+    const outward = signedArea(ring) > 0 ? 1 : -1;
+    const reach = item.width / 2 + 0.5;
+    // Only a neighbour whose box is within reach of this point can limit it.
+    const limit = 2 * (reach + SEAM);
+    const room = ring.map((p) => Math.max(0, near.reduce((r, other) => {
+      const b = other.box;
+      if (p[0] < b.x0 - limit || p[0] > b.x1 + limit || p[1] < b.y0 - limit || p[1] > b.y1 + limit) return r;
+      return Math.min(r, nearDistance(p, other, 2 * (r + SEAM)) / 2 - SEAM);
+    }, reach)));
+    const normal = (a, b) => {
+      const dx = b[0] - a[0];
+      const dy = b[1] - a[1];
+      const len = Math.hypot(dx, dy) || 1;
+      return [(outward * dy) / len, (-outward * dx) / len];
+    };
+    const clip = [];
+    for (let i = 0; i < n; i += 1) {
+      const p = ring[i];
+      const r = room[i];
+      // Each edge is pushed out along its own normal; at a vertex an arc joins the two edges'
+      // normals, so every clip point is within r of the outline point it came from.
+      const before = normal(ring[(i - 1 + n) % n], p);
+      const after = normal(p, ring[(i + 1) % n]);
+      const from = Math.atan2(before[1], before[0]);
+      let turn = Math.atan2(after[1], after[0]) - from;
+      if (turn > Math.PI) turn -= 2 * Math.PI;
+      if (turn < -Math.PI) turn += 2 * Math.PI;
+      const steps = Math.max(1, Math.ceil(Math.abs(turn) / (Math.PI / 12)));
+      for (let k = 0; k <= steps; k += 1) {
+        const angle = from + (turn * k) / steps;
+        clip.push([p[0] + Math.cos(angle) * r, p[1] + Math.sin(angle) * r]);
+      }
+    }
+    // Simplify as two open halves: a closed run starts and ends on the same point.
+    const half = Math.floor(clip.length / 2);
+    item.clip = [...simplify(clip.slice(0, half + 1), 0.08).slice(0, -1), ...simplify([...clip.slice(half), clip[0]], 0.08).slice(0, -1)];
+  }
+  return items;
+}
+
+const fmt = (n) => +n.toFixed(2);
+const polygon = (points) => `M${points.map((p) => `${fmt(p[0])} ${fmt(p[1])}`).join(' L')} Z`;
+
+const HOTSPOT_PARTS = / data-muscle="([^"]+)"[^>]* d="([^"]+)"/g;
+const hotspotList = (markup) => [...markup.matchAll(HOTSPOT_PARTS)].map((m) => ({ id: m[1], d: m[2] }));
+
+const hitsMarkup = (items) => `<g class="hits" aria-hidden="true">${items.map((item, i) => {
+  const wide = item.width > HALO_MIN ? ` style="stroke-width:${item.width}"` : '';
+  return `<clipPath id="ga-hit-${i}"><path d="${polygon(item.clip)}"/></clipPath>`
+    + `<path class="hit" data-hit="${item.id}" d="${item.d}" clip-path="url(#ga-hit-${i})"${wide}/>`;
+}).join('')}</g>`;
+
+const figure = ({ label, silhouette, forms, lines, details, hotspots, hits }) => {
   // The grooves are the edges of the tappable groups, so the carving and the targets always agree.
   const shapes = [...hotspots.matchAll(/ d="([^"]+)"/g)].map((m) => m[1]);
   const grooves = shapes.join(' ');
@@ -153,6 +394,7 @@ const figure = ({ label, silhouette, forms, lines, details, hotspots }) => {
     <path class="grooves details" d="${details}"/>
     <path class="rim" d="${RIM}" clip-path="url(#ga-clip)"/>
   </g>
+  ${hitsMarkup(hits)}
   <g class="hotspots">${hotspots}</g>
 </svg>`;
 };
@@ -217,6 +459,8 @@ const FRONT_HOTSPOTS = [
     + 'C 95 368, 93.6 369.6, 91.8 369.8 C 88.6 371, 83 371, 80.6 369.6 C 78.4 368.2, 78.4 363.4, 79.8 359.6 C 80.4 357.8, 79.2 357, 78.8 355.4 C 78.6 352.6, 79.6 349.4, 80.6 347 Z'),
 ].join('');
 
+const FRONT_HITS = hitAreas(hotspotList(FRONT_HOTSPOTS));
+
 export const FRONT_FIGURE = figure({
   label: 'Front of the body: tap a body part',
   silhouette: SIL_FRONT,
@@ -224,6 +468,7 @@ export const FRONT_FIGURE = figure({
   lines: FRONT_LINES,
   details: DETAILS_FRONT,
   hotspots: FRONT_HOTSPOTS,
+  hits: FRONT_HITS,
 });
 
 
@@ -288,6 +533,8 @@ const BACK_HOTSPOTS = [
   pair('ankles', 'Ankles', 'M81 342.6 L 90.4 342.6 C 91 350, 91.6 356, 91 361 C 91.8 364, 91.6 368, 89.4 369.8 C 87 371, 84 370.8, 82.4 369.4 C 80.6 367.6, 80.4 364, 81 361 C 80.6 356, 80.8 349, 81 342.6 Z'),
 ].join('');
 
+const BACK_HITS = hitAreas(hotspotList(BACK_HOTSPOTS));
+
 export const BACK_FIGURE = figure({
   label: 'Back of the body: tap a body part',
   silhouette: SIL_BACK,
@@ -295,4 +542,8 @@ export const BACK_FIGURE = figure({
   lines: BACK_LINES,
   details: DETAILS_BACK,
   hotspots: BACK_HOTSPOTS,
+  hits: BACK_HITS,
 });
+
+/** Per view: every hotspot's id, outline (user units), halo width and halo clip polygon. */
+export const HITS = { front: FRONT_HITS, back: BACK_HITS };
