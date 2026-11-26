@@ -37,4 +37,4 @@ export function usableLevel(id, level) {
 export const DATA_LEVELS = [...new Set(EXERCISES.map((exercise) => exercise.level))];
 
 export const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
-export const startLabel = (n) => `Start with ${plural(n, 'movement')}`;
+export const startLabel = (n) => `View ${plural(n, 'movement')}`;
