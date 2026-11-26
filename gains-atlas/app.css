@@ -75,8 +75,8 @@ h1, h2, p { margin: 0; }
 
 .hero-photo {
   position: relative;
-  height: min(52vh, 440px);
-  height: min(52svh, 440px);
+  height: min(32vh, 290px);
+  height: min(32svh, 290px);
   background: var(--page) url('img/hero.jpg') 62% 30% / cover no-repeat;
   overflow: hidden;
 }
@@ -100,13 +100,13 @@ h1, h2, p { margin: 0; }
 
 .hero-mark {
   position: absolute; z-index: 3; left: 20px; bottom: 12px;
-  font-size: 56px; line-height: 50px; font-weight: 900; letter-spacing: -0.04em;
+  font-size: 50px; line-height: 44px; font-weight: 900; letter-spacing: -0.04em;
 }
 .hero-mark span { display: block; }
 .mark-1 { color: var(--text); }
 .mark-2 { color: var(--ember); }
 
-.hero-copy { padding: 4px 20px 0; }
+.hero-copy { padding: 2px 20px 0; }
 .lede { color: var(--text-2); max-width: 34ch; }
 .hero-stat { margin-top: 6px; font-size: 13px; line-height: 18px; font-weight: 500; color: var(--text-2); }
 .hero-stat strong { color: var(--text); font-weight: 500; }
@@ -115,8 +115,9 @@ h1, h2, p { margin: 0; }
 
 .stage {
   position: relative;
-  margin: 10px -16px 0;
-  padding: 8px 0 6px;
+  margin: 6px -16px 0;
+  padding: 4px 0 14px;
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
   overflow: hidden;
   isolation: isolate;
   /* a neutral stage: a soft pool of light behind the body on a faint vertical panel, no colour.
@@ -130,9 +131,9 @@ h1, h2, p { margin: 0; }
 
 .figure {
   display: block;
-  height: 56vh;
-  height: 56svh;
-  min-height: 380px;
+  height: 44vh;
+  height: 44svh;
+  min-height: 330px;
   max-height: 640px;
   width: auto;
   aspect-ratio: 124 / 370;
