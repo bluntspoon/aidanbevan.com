@@ -73,8 +73,9 @@ function viewMap() {
         <h1 class="hero-mark"><span class="mark-1">Gains</span> <span class="mark-2">Atlas</span></h1>
       </div>
       <div class="hero-copy">
-        <p class="lede">Tap a body part. Get every movement for it, with the dose and the mistake to avoid.</p>
-        <p class="hero-stat"><strong>${EXERCISES.length}</strong> movements · <strong>${MUSCLES.length}</strong> groups</p>
+        <p class="lede">A gym aid for building specific muscles. Tap a body part, get every movement for it.</p>
+        <p class="hero-stat"><strong>${EXERCISES.length}</strong> movements · <strong>${MUSCLES.length}</strong> body parts</p>
+        <p class="hero-free">Free to use. Works offline once installed.</p>
       </div>
     </section>
 
@@ -331,6 +332,15 @@ function introSweep(svg) {
     return; // storage blocked: skip the sweep rather than repeat it on every visit
   }
   if (reducedMotion()) return;
+  // While the welcome sheet is up nobody can see the sweep: run it once the sheet closes.
+  if (document.documentElement.classList.contains('welcome-open')) {
+    window.addEventListener('ga:welcome-closed', () => { if (svg.isConnected) sweep(svg); }, { once: true });
+    return;
+  }
+  sweep(svg);
+}
+
+function sweep(svg) {
   const hotspots = [...svg.querySelectorAll('.hotspot')];
   const tops = new Map(hotspots.map((path) => [path, path.getBBox().y]));
   hotspots.sort((a, b) => tops.get(a) - tops.get(b))
@@ -433,6 +443,10 @@ function route() {
 function boot() {
   window.addEventListener('hashchange', route);
   route();
+  // Offline after the first load: sw.js keeps the app's own files and nothing else.
+  if ('serviceWorker' in navigator && window.isSecureContext) {
+    navigator.serviceWorker.register(new URL('./sw.js', import.meta.url)).catch(() => {});
+  }
 }
 
 if (typeof document !== 'undefined' && typeof window !== 'undefined') boot();

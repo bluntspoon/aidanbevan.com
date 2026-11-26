@@ -50,3 +50,15 @@ description: Aidan Bevan - Certified Junior Gymnastics Coach in Pinetown, South 
   </div>
 </section>
 
+
+<section class="home-app" aria-labelledby="gains-atlas-title">
+  <div class="card app-card">
+    <img class="app-card-icon" src="/gains-atlas/icon.svg" alt="Gains Atlas app icon: a flexing figure over a globe" width="112" height="112" loading="lazy">
+    <div class="app-card-body">
+      <p class="app-card-label">Free tool</p>
+      <h2 class="card-title" id="gains-atlas-title">Gains Atlas</h2>
+      <p class="card-text">Tap a muscle, get every movement for it — sets, reps, rest and step-by-step form for 138 movements across 23 body parts.</p>
+      <a href="/gains-atlas/" class="btn btn-outline app-card-btn">Open Gains Atlas</a>
+    </div>
+  </div>
+</section>

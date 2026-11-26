@@ -64,10 +64,22 @@ h1, h2, p { margin: 0; }
 .topbar {
   max-width: 620px; margin: 0 auto;
   padding: calc(12px + env(safe-area-inset-top)) 16px 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
 .wordmark { font-size: 15px; line-height: 22px; font-weight: 800; color: var(--text); }
-/* On home the big wordmark is the brand; the bar would only repeat it. */
-.is-home .topbar { display: none; }
+/* The way back to the welcome sheet and the install steps: a quiet text button, always there. */
+.topbar-install {
+  flex: none; min-height: 32px; margin-right: -8px; padding: 0 8px;
+  border: 0; border-radius: var(--r); background: transparent; color: var(--text-2);
+  font: inherit; font-size: 13px; line-height: 18px; font-weight: 600;
+  text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 4px;
+  cursor: pointer;
+}
+.topbar-install:hover { color: var(--text); text-decoration-color: var(--ember); }
+/* On home the big wordmark is the brand; the bar floats over the photo and only carries Install. */
+.is-home .topbar { position: absolute; top: 0; left: 0; right: 0; z-index: 4; }
+.is-home .wordmark { visibility: hidden; }
+.is-home .topbar-install { color: var(--text); }
 
 /* --------------------------------------------------------------------- hero */
 
@@ -75,8 +87,8 @@ h1, h2, p { margin: 0; }
 
 .hero-photo {
   position: relative;
-  height: min(32vh, 290px);
-  height: min(32svh, 290px);
+  height: min(28vh, 290px);
+  height: min(28svh, 290px);
   background: var(--page) url('img/hero.jpg') 62% 30% / cover no-repeat;
   overflow: hidden;
 }
@@ -107,9 +119,10 @@ h1, h2, p { margin: 0; }
 .mark-2 { color: var(--ember); }
 
 .hero-copy { padding: 2px 20px 0; }
-.lede { color: var(--text-2); max-width: 34ch; }
-.hero-stat { margin-top: 6px; font-size: 13px; line-height: 18px; font-weight: 500; color: var(--text-2); }
+.lede { color: var(--text-2); max-width: 42ch; }
+.hero-stat { margin-top: 4px; font-size: 13px; line-height: 18px; font-weight: 500; color: var(--text-2); }
 .hero-stat strong { color: var(--text); font-weight: 500; }
+.hero-free { font-size: 13px; line-height: 18px; font-weight: 500; color: var(--faint); }
 
 /* -------------------------------------------------------------------- stage */
 
@@ -400,6 +413,75 @@ details[open] .ex-toggle svg { transform: rotate(180deg); }
 .other { margin-top: 40px; }
 .other .chips { margin-top: 4px; }
 
+/* ------------------------------------------------------------- site footer */
+
+.site-foot {
+  max-width: 620px; margin: 0 auto;
+  padding: 0 16px calc(24px + env(safe-area-inset-bottom));
+  color: var(--faint); font-size: 13px; line-height: 18px;
+}
+.site-foot a { color: var(--text-2); text-underline-offset: 3px; text-decoration-color: var(--line); }
+.site-foot a:hover { color: var(--text); text-decoration-color: var(--ember); }
+
+/* ----------------------------------------------------------- welcome sheet */
+
+.welcome-open, .welcome-open body { overflow: hidden; }
+
+/* A bottom sheet on a phone, a centred panel on anything wider. No padding on the
+   <dialog> itself, so a tap that lands on it is a tap outside the content. */
+.sheet {
+  width: 100%; max-width: 520px; max-height: min(88vh, 720px); max-height: min(88svh, 720px);
+  margin: auto auto 0; padding: 0;
+  border: 0; border-radius: var(--r) var(--r) 0 0;
+  background: var(--raised); color: var(--text);
+  box-shadow: inset 0 1px 0 var(--hairline);
+  overflow: hidden;
+}
+.sheet[open] { display: flex; flex-direction: column; }
+.sheet::backdrop { background: #0d0b0bd9; }
+
+.sheet-body { overflow-y: auto; overscroll-behavior: contain; padding: 24px 20px 8px; }
+.sheet-title { margin-top: 2px; font-size: 32px; line-height: 36px; font-weight: 800; letter-spacing: -0.02em; color: #fff; }
+.sheet-lede { margin-top: 12px; font-size: 17px; line-height: 24px; color: var(--text); }
+.sheet-note { margin-top: 8px; color: var(--text-2); }
+
+.sheet-h {
+  margin: 24px 0 0; padding-top: 16px; border-top: 1px solid var(--line);
+  font-size: 11px; line-height: 14px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-2);
+}
+.sheet-steps { margin: 12px 0 0; padding: 0; list-style: none; counter-reset: step; display: grid; gap: 10px; }
+.sheet-steps li { position: relative; padding-left: 32px; counter-increment: step; }
+.sheet-steps li::before {
+  content: counter(step);
+  position: absolute; left: 0; top: 0;
+  width: 22px; height: 22px; display: grid; place-items: center;
+  border-radius: var(--r-full); background: var(--ember); color: var(--ember-ink);
+  font-size: 13px; font-weight: 700;
+}
+.sheet-count { margin-top: 16px; color: var(--text-2); }
+.sheet-count b { color: var(--text); font-weight: 650; }
+
+.sheet-install p { margin-top: 12px; color: var(--text-2); }
+.sheet-install .install-done { color: var(--text); }
+.install-how { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.install-how li { padding-left: 12px; border-left: 2px solid var(--line); color: var(--text-2); }
+.install-how li:first-child { border-left-color: var(--ember); }
+.install-how b { color: var(--text); font-weight: 600; }
+.install-how[hidden], .install-done[hidden], .btn[hidden] { display: none; }
+
+.sheet-foot { flex: none; padding: 12px 20px calc(16px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
+.btn {
+  display: block; width: 100%; min-height: 48px; padding: 0 16px;
+  border: 0; border-radius: var(--r);
+  font: inherit; font-size: 15px; font-weight: 700;
+  cursor: pointer;
+}
+.btn-ember { background: var(--ember); color: var(--ember-ink); }
+.btn-ember:hover { background: #ff6d39; }
+.btn-quiet { margin-top: 12px; background: var(--thumb); color: var(--text); box-shadow: inset 0 0 0 1px #ff5a1f2e; }
+.btn-quiet:hover { background: #2e2523; }
+
 /* ------------------------------------------------------------------- motion */
 
 @media (prefers-reduced-motion: no-preference) {
@@ -408,6 +490,13 @@ details[open] .ex-toggle svg { transform: rotate(180deg); }
   .exercise { animation: ga-rise 360ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 30ms); }
   .no-stagger .exercise { animation: none; }
   details[open] .ex-body { animation: ga-fade 200ms ease-out both; }
+  .sheet[open] { animation: ga-sheet 280ms var(--ease-out) both; }
+  .sheet[open]::backdrop { animation: ga-fade 200ms ease-out both; }
+}
+
+@keyframes ga-sheet {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: none; }
 }
 
 @keyframes ga-intro {
@@ -436,4 +525,5 @@ details[open] .ex-toggle svg { transform: rotate(180deg); }
   .hero-photo { border-radius: 0 0 var(--r) var(--r); }
   .muscle-head { margin: 0; }
   .exercises { margin: 0; }
+  .sheet { margin: auto; border-radius: var(--r); }
 }

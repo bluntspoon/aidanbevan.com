@@ -18,3 +18,5 @@ worker/.wrangler/
 .DS_Store
 Thumbs.db
 vendor/
+
+gains-atlas/node_modules/
