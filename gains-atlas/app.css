@@ -389,8 +389,6 @@ h1, h2, p { margin: 0; }
   font-size: 32px; line-height: 36px; font-weight: 800; letter-spacing: -0.02em;
   overflow-wrap: anywhere;
 }
-.count { margin-top: 2px; color: var(--text-2); font-size: 13px; line-height: 18px; font-weight: 500; }
-.count b { color: var(--text); font-weight: 500; }
 .goal-pill {
   display: inline-block; margin-top: 6px; padding: 2px 10px;
   border-radius: var(--r-full); box-shadow: inset 0 0 0 1px #ff5a1f59;
@@ -398,13 +396,55 @@ h1, h2, p { margin: 0; }
 }
 .goal-pill[hidden] { display: none; }
 
-.muscle-blurb { margin-top: 16px; color: var(--text-2); }
+.muscle-blurb { margin-top: 24px; color: var(--text-2); }
+.muscle-blurb b { color: var(--text); font-weight: 600; }
 .joint-note { display: block; margin-top: 4px; font-size: 13px; line-height: 18px; font-weight: 500; }
+.muscle-joint { margin-top: 10px; color: var(--text-2); }
 
-/* filters: one segmented control of three real <select>s */
+/* "You picked: Chest · Beginner · 4 movements": the top of a workout sheet, and the way to change level */
+.picked {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  width: 100%; min-height: 56px; margin: 12px 0 0; padding: 8px 14px;
+  border: 0; border-radius: var(--r);
+  background: var(--raised); box-shadow: inset 0 0 0 1px #ff5a1f40;
+  color: var(--text-2); font: inherit; text-align: left;
+  cursor: pointer;
+}
+.picked-text { display: grid; min-width: 0; }
+.picked-over { font-size: 13px; line-height: 18px; font-weight: 500; }
+.picked-what { color: var(--text-2); font-size: 15px; line-height: 21px; }
+.picked b { color: #fff; font-weight: 650; }
+.picked-change {
+  flex: none; color: var(--ember); font-size: 13px; line-height: 18px; font-weight: 700;
+}
+.picked[aria-expanded='true'] .picked-change { color: var(--text-2); }
+.picked:hover { background: var(--thumb); }
+.level-pick { margin-top: 8px; }
+.level-pick[hidden] { display: none; }
+
+/* the three level choices: one row of big buttons, the count under each name */
+/* All is a short word and Intermediate + a long one: roughly thirds, weighted so neither wraps at 360. */
+.levels { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 1.3fr); gap: 6px; }
+.level-choice {
+  display: grid; align-content: center; justify-items: center; gap: 0;
+  min-width: 0; min-height: 56px; padding: 6px 4px;
+  border: 0; border-radius: var(--r);
+  background: var(--thumb); box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--text); font: inherit; text-align: center;
+  cursor: pointer;
+}
+.level-name { font-size: 14px; line-height: 20px; font-weight: 700; white-space: nowrap; }
+.level-n { font-size: 13px; line-height: 18px; font-weight: 500; color: var(--text-2); }
+.level-choice:hover { background: #2e2523; }
+.level-choice.is-on { background: #3a1e12; box-shadow: inset 0 0 0 2px var(--ember); }
+.level-choice.is-on .level-n { color: var(--text); }
+.level-choice:disabled { cursor: default; opacity: 0.45; }
+.pick-note { margin-top: 6px; padding: 0 4px; color: var(--faint); font-size: 13px; line-height: 18px; }
+
+/* filters: one segmented control of real <select>s (where, kit) */
 .filters {
-  display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.15fr) minmax(0, 0.95fr); gap: 2px;
-  margin: 20px 0 8px; padding: 3px;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 2px;
+  margin: 16px 0 8px; padding: 3px;
   background: var(--raised); box-shadow: inset 0 1px 0 var(--hairline);
   border-radius: var(--r);
 }
@@ -606,6 +646,84 @@ details[open] .ex-toggle svg { transform: rotate(180deg); }
 .peek-actions { display: grid; gap: 10px; margin-top: 8px; }
 .peek .btn { min-height: 56px; margin: 0; font-size: 17px; }
 
+/* ------------------------------------------------------- the pick panel */
+
+/* Tap 1 on the map opens this: non-modal, docked to the bottom above the safe area, so Start sits
+   under the thumb and the map behind it stays live. The page scrolls the picked group above it. */
+.pick {
+  position: fixed; inset: auto 0 0; z-index: 20;
+  width: 100%; max-width: 520px; margin: 0 auto; padding: 0;
+  border: 0; border-radius: var(--r) var(--r) 0 0;
+  background: var(--raised); color: var(--text);
+  box-shadow: inset 0 1px 0 var(--hairline), 0 -12px 32px #000000a6;
+}
+.pick-body { position: relative; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }
+.pick-latin { padding: 4px 48px 0 4px; overflow-wrap: anywhere; }
+.pick-name {
+  margin-top: 2px; padding: 0 48px 0 4px;
+  font-size: 26px; line-height: 30px; font-weight: 800; letter-spacing: -0.02em; color: #fff;
+  overflow-wrap: anywhere;
+}
+.pick-blurb { margin-top: 2px; padding: 0 4px; color: var(--text-2); font-size: 14px; line-height: 19px; }
+.pick-blurb .joint-note { margin-top: 2px; }
+.pick-n { margin-top: 4px; padding: 0 4px; color: var(--text); font-size: 13px; line-height: 18px; font-weight: 600; }
+.pick .levels { margin-top: 8px; }
+.pick-actions { display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: 8px; margin-top: 10px; }
+.pick .pick-start { min-height: 52px; padding: 0 8px; font-size: 16px; white-space: nowrap; }
+@media (max-width: 374px) { .pick .pick-start { font-size: 15px; } }
+
+/* Short phones: the panel gives a little back, so the whole body still fits above it. */
+@media (max-height: 860px) {
+  .pick-latin { display: none; }
+  .pick-body { padding-top: 6px; }
+  .pick-note { font-size: 13px; line-height: 17px; }
+}
+@media (max-height: 800px) {
+  .pick-body { padding-top: 8px; }
+  .pick-note { display: block; }
+  .pick-name { font-size: 23px; line-height: 27px; }
+  .pick-blurb { font-size: 13px; line-height: 18px; }
+  .pick-note { display: none; }
+  .pick .levels { margin-top: 6px; }
+  .level-choice { min-height: 52px; }
+  .pick-actions { margin-top: 8px; }
+  .pick .pick-start, .pick-save { min-height: 50px; }
+}
+.pick-save {
+  min-height: 52px; padding: 0 8px;
+  border: 0; border-radius: var(--r);
+  background: transparent; box-shadow: none; text-decoration: underline; text-underline-offset: 3px;
+  color: var(--text-2); font: inherit; font-size: 13px; line-height: 16px; font-weight: 600;
+  cursor: pointer;
+}
+.pick-save[aria-pressed='true'] { color: var(--ember); text-decoration: none; }
+.pick-save:hover { color: var(--text); }
+.pick-close {
+  position: absolute; top: 4px; right: 4px;
+  display: grid; place-items: center;
+  width: 48px; min-width: 48px; height: 48px; min-height: 48px; padding: 0;
+  border: 0; border-radius: var(--r-full); background: transparent; color: var(--text-2);
+  font: inherit; font-size: 28px; line-height: 1;
+  cursor: pointer;
+}
+.pick-close:hover { color: #fff; background: var(--thumb); }
+/* room under the page's last line, so nothing is stuck behind the open panel */
+.pick-open body { padding-bottom: calc(var(--pick-h, 300px) + env(safe-area-inset-bottom)); }
+
+/* While a group is picked, the panel owns the bottom of the screen, so give the body the room
+   above it: the photo and the copy step away and the figure shrinks to fit, so every group stays
+   tappable instead of sitting behind the sheet. */
+.pick-open .hero { display: none; }
+.pick-open .stage { margin-top: 0; }
+.pick-open .figure {
+  height: calc(100svh - var(--pick-h, 300px) - 176px);
+  min-height: 260px;
+  max-height: 56svh;
+}
+@media (max-height: 700px) {
+  .pick-open .figure { height: calc(100svh - var(--pick-h, 300px) - 160px); min-height: 220px; }
+}
+
 /* ------------------------------------------------------------------- motion */
 
 @media (prefers-reduced-motion: no-preference) {
@@ -618,6 +736,7 @@ details[open] .ex-toggle svg { transform: rotate(180deg); }
   .sheet[open]::backdrop { animation: ga-fade 200ms ease-out both; }
   .peek[open] { animation: ga-sheet 200ms var(--ease-out) both; }
   .peek[open]::backdrop { animation: ga-fade 160ms ease-out both; }
+  .pick[open] { animation: ga-sheet 160ms var(--ease-out) both; }
 }
 
 @keyframes ga-sheet {
