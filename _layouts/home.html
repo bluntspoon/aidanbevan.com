@@ -7,3 +7,19 @@ layout: default
     {{ content }}
   </div>
 </section>
+
+<a class="home-tab" href="/gains-atlas/" aria-label="Free tool: open Gains Atlas">
+  <svg class="home-tab-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10" aria-hidden="true" focusable="false">
+    <path d="M6.5 1.5 3 5l3.5 3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <span class="home-tab-label"><span class="home-tab-free">Free</span><br>Gains Atlas</span>
+</a>
+
+<script>
+  // Hide the side tab while the Gains Atlas card itself is on screen.
+  (function () {
+    var tab = document.querySelector('.home-tab'), card = document.querySelector('.home-app');
+    if (!tab || !card || !('IntersectionObserver' in window)) return;
+    new IntersectionObserver(function (e) { tab.classList.toggle('is-hidden', e[0].isIntersecting); }).observe(card);
+  })();
+</script>
