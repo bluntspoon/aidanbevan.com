@@ -54,7 +54,7 @@ h1, h2, p { margin: 0; }
 
 /* the type scale: overline, meta, body, card title, h2, h1, display */
 .overline {
-  font-size: 11px; line-height: 14px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  font-size: 13px; line-height: 16px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--text-2);
 }
 .eyebrow { font-size: 13px; line-height: 18px; font-weight: 500; color: var(--text-2); }
@@ -63,13 +63,13 @@ h1, h2, p { margin: 0; }
 
 .topbar {
   max-width: 620px; margin: 0 auto;
-  padding: calc(12px + env(safe-area-inset-top)) 16px 0;
+  padding: calc(6px + env(safe-area-inset-top)) 16px 0;
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
 .wordmark { font-size: 15px; line-height: 22px; font-weight: 800; color: var(--text); }
 /* The way back to the welcome sheet and the install steps: a quiet text button, always there. */
 .topbar-install {
-  flex: none; min-height: 32px; margin-right: -8px; padding: 0 8px;
+  flex: none; min-height: 44px; margin-right: -8px; padding: 0 8px;
   border: 0; border-radius: var(--r); background: transparent; color: var(--text-2);
   font: inherit; font-size: 13px; line-height: 18px; font-weight: 600;
   text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 4px;
@@ -83,12 +83,23 @@ h1, h2, p { margin: 0; }
 
 /* --------------------------------------------------------------------- hero */
 
+/* The first screen is a column exactly one viewport tall: a strip of photo, two lines of copy,
+   the controls, and the body map taking every pixel that is left. The map is the point; the photo
+   is decoration, so it is the part that gives way. */
+.home-first {
+  display: flex; flex-direction: column;
+  height: 100vh; height: 100svh;
+  min-height: 560px; max-height: 1180px;
+}
+.home-first.is-list { height: auto; min-height: 0; max-height: none; }
+.home-first > * { flex: none; }
+
 .hero { margin: 0 -16px; }
 
 .hero-photo {
   position: relative;
-  height: min(28vh, 290px);
-  height: min(28svh, 290px);
+  height: clamp(80px, 14vh, 150px);
+  height: clamp(80px, 14svh, 150px);
   background: var(--page) url('img/hero.jpg') 62% 30% / cover no-repeat;
   overflow: hidden;
 }
@@ -111,28 +122,34 @@ h1, h2, p { margin: 0; }
 }
 
 .hero-mark {
-  position: absolute; z-index: 3; left: 20px; bottom: 12px;
-  font-size: 50px; line-height: 44px; font-weight: 900; letter-spacing: -0.04em;
+  position: absolute; z-index: 3; left: 20px; bottom: 6px;
+  font-size: 36px; line-height: 40px; font-weight: 900; letter-spacing: -0.04em;
 }
-.hero-mark span { display: block; }
+/* with goals on the first screen the photo shrinks again, so the figure keeps its height */
+.has-goals .hero-photo { height: clamp(64px, 9vh, 100px); height: clamp(64px, 9svh, 100px); }
+.has-goals .hero-mark { font-size: 30px; line-height: 34px; }
 .mark-1 { color: var(--text); }
 .mark-2 { color: var(--ember); }
 
-.hero-copy { padding: 2px 20px 0; }
-.lede { color: var(--text-2); max-width: 42ch; }
-.hero-stat { margin-top: 4px; font-size: 13px; line-height: 18px; font-weight: 500; color: var(--text-2); }
+.hero-copy { padding: 4px 20px 0; }
+.lede { color: var(--text-2); max-width: 42ch; text-wrap: balance; }
+.hero-stat { margin-top: 2px; font-size: 13px; line-height: 18px; font-weight: 500; color: var(--text-2); }
 .hero-stat strong { color: var(--text); font-weight: 500; }
-.hero-free { font-size: 13px; line-height: 18px; font-weight: 500; color: var(--faint); }
 
 /* -------------------------------------------------------------------- stage */
 
 .stage {
   position: relative;
-  margin: 6px -16px 0;
-  padding: 4px 0 14px;
-  padding-bottom: max(14px, env(safe-area-inset-bottom));
+  flex: 1 1 0; min-height: 0;
+  margin: 4px -16px 0;
+  padding: 4px 0 10px;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
   overflow: hidden;
   isolation: isolate;
+  /* a hold is a hold: no text selection, no callout menu, no double-tap zoom */
+  -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
   /* a neutral stage: a soft pool of light behind the body on a faint vertical panel, no colour.
      The floor shadow under the feet is drawn in the figure. */
   background:
@@ -140,14 +157,14 @@ h1, h2, p { margin: 0; }
     linear-gradient(180deg, transparent, #ffffff0a 18%, #ffffff07 80%, transparent);
 }
 
-.map { display: grid; place-items: center; }
+.map { display: grid; place-items: center; height: 100%; min-height: 0; }
+.stage[hidden], .parts[hidden], .goals[hidden] { display: none; }
 
 .figure {
   display: block;
-  height: 44vh;
-  height: 44svh;
-  min-height: 330px;
-  max-height: 640px;
+  height: 100%;
+  min-height: 0;
+  max-height: 780px;
   width: auto;
   aspect-ratio: 124 / 370;
   max-width: 100%;
@@ -168,12 +185,25 @@ h1, h2, p { margin: 0; }
 /* The pop comes from dimming the rest: the body stays solid, only darker. */
 .figure.is-engaged .anatomy { filter: brightness(0.45) saturate(0.6); }
 
+/* The invisible hit area under each group: its own outline, stroked fat and transparent, clipped
+   halfway to its neighbours in body-map.js. Only the stroke takes taps; the drawn group above it
+   takes the rest. */
+.hit {
+  fill: none;
+  fill-opacity: 0;
+  stroke: transparent;
+  stroke-width: 14;
+  stroke-linejoin: round;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
 /* At rest every group carries a faint ember edge, so the whole map reads as tappable. */
 .hotspot {
   fill: var(--ember);
-  fill-opacity: 0.03;
+  fill-opacity: 0.06;
   stroke: #ffb9a0;
-  stroke-opacity: 0.07;
+  stroke-opacity: 0.14;
   stroke-width: 0.6;
   stroke-linejoin: round;
   cursor: pointer;
@@ -219,14 +249,23 @@ h1, h2, p { margin: 0; }
 
 /* ------------------------------------------------- front/back segmented control */
 
+/* Front/Back on the left, Body map/List on the right: two segmented controls on one row. */
+.map-bar {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 8px;
+  margin: 10px 0 0;
+}
+/* In the list there is no front or back to pick: the tabs step out, but keep their place. */
+.is-list .map-bar > .map-tabs:first-child { visibility: hidden; }
 .map-tabs {
   display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
-  width: 200px; margin: 20px auto 0; padding: 3px;
+  min-width: 0; padding: 3px;
   background: var(--raised); box-shadow: inset 0 1px 0 var(--hairline);
   border-radius: var(--r);
 }
+.home-switch { grid-template-columns: 1.45fr 1fr; }
 .tab {
-  min-height: 38px; border: 0; border-radius: var(--r-full);
+  min-width: 0; min-height: 44px; padding: 0 4px; border: 0; border-radius: var(--r-full);
+  white-space: nowrap;
   background: transparent; color: var(--text-2);
   font: inherit; font-size: 15px; font-weight: 600;
   cursor: pointer;
@@ -236,20 +275,78 @@ h1, h2, p { margin: 0; }
 .tab.is-on { background: #2e2523; color: #fff; box-shadow: inset 0 1px 0 #ffffff1a, inset 0 0 0 1px #ff5a1f2e; }
 .tab.is-on:hover { color: #fff; }
 
-.map-hint { text-align: center; color: var(--text-2); font-size: 13px; line-height: 18px; font-weight: 500; margin: 10px 0 0; }
+.map-hint { text-align: center; color: var(--text-2); font-size: 13px; line-height: 18px; font-weight: 500; margin: 6px 0 0; }
+
+/* ------------------------------------------------------------- my goals */
+
+.goals { margin: 8px 0 0; }
+.goals-h {
+  margin: 0 0 4px;
+  font-size: 13px; line-height: 16px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-2);
+}
+/* two even columns: four goals are two rows, never a ragged wrap */
+.goal-chips { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.goal-chips li { min-width: 0; }
+.goal-chip, .goal-all {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  width: 100%; min-height: 44px; padding: 0 14px;
+  border: 0; border-radius: var(--r-full);
+  background: var(--raised); box-shadow: inset 0 0 0 1px #ff5a1f40;
+  color: var(--text); font: inherit; font-size: 15px; font-weight: 600;
+  cursor: pointer;
+}
+.goal-name { min-width: 0; overflow-wrap: anywhere; text-align: left; }
+.goal-n { color: var(--text-2); font-size: 13px; font-weight: 500; }
+.goal-all { justify-content: center; background: transparent; box-shadow: inset 0 0 0 1px var(--line); color: var(--text-2); }
+.goal-chip:hover, .goal-all:hover { color: #fff; }
+
+/* -------------------------------------------- the quick list (no body map) */
+
+.parts { margin-top: 12px; }
+.parts-h {
+  margin: 12px 0 0; padding: 8px 0;
+  font-size: 13px; line-height: 18px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-2);
+}
+.part-list { list-style: none; margin: 0 -16px; padding: 0; border-top: 1px solid var(--line); }
+.part-row { display: flex; align-items: stretch; border-bottom: 1px solid var(--line); }
+.part {
+  flex: 1 1 auto; min-width: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 56px; padding: 0 4px 0 16px;
+  border: 0; background: transparent; color: var(--text);
+  font: inherit; text-align: left;
+  cursor: pointer;
+}
+.part-name { min-width: 0; font-size: 19px; line-height: 24px; font-weight: 650; overflow-wrap: anywhere; }
+.part-n { flex: none; color: var(--text-2); font-size: 15px; font-weight: 500; }
+.part:hover .part-name, .part:focus-visible .part-name { color: #fff; text-decoration: underline; text-decoration-color: var(--ember); text-underline-offset: 4px; }
+.part-row .more { align-self: center; margin-right: 6px; }
+
+/* the ⋯ button: the way to the same sheet a press-and-hold opens */
+.more {
+  flex: none; display: grid; place-items: center;
+  width: 44px; min-width: 44px; height: 44px; min-height: 44px; padding: 0;
+  border: 0; border-radius: var(--r-full); background: transparent; color: var(--text-2);
+  font: inherit; font-size: 22px; line-height: 1; font-weight: 700;
+  cursor: pointer;
+}
+.more:hover { color: #fff; background: var(--thumb); }
 
 /* ------------------------------------------------- the list of every body part */
 
-.stage + .overline { margin-top: 32px; }
+.home-first + .overline { margin-top: 28px; }
 .overline + .chips { margin-top: 8px; }
 .chips {
   list-style: none; padding: 0; margin: 0;
-  display: grid; grid-template-columns: 1fr 1fr; column-gap: 24px;
+  display: grid; grid-template-columns: 1fr 1fr; column-gap: 12px;
 }
+.chip-row { display: flex; align-items: center; min-width: 0; border-bottom: 1px solid var(--line); }
 .chip {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  width: 100%; min-height: 48px; padding: 0;
-  border: 0; border-bottom: 1px solid var(--line);
+  flex: 1 1 auto; min-width: 0; min-height: 48px; padding: 0;
+  border: 0;
   background: transparent; color: var(--text);
   font: inherit; text-align: left;
   cursor: pointer;
@@ -275,8 +372,8 @@ h1, h2, p { margin: 0; }
 
 .muscle-head {
   position: sticky; top: 0; z-index: 10;
-  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center;
-  margin: 0 -16px; padding: 12px 16px;
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px 16px; align-items: center;
+  margin: 0 -16px; padding: 12px 8px 12px 16px;
   background: var(--overlay);
   border-bottom: 1px solid var(--line);
 }
@@ -294,6 +391,12 @@ h1, h2, p { margin: 0; }
 }
 .count { margin-top: 2px; color: var(--text-2); font-size: 13px; line-height: 18px; font-weight: 500; }
 .count b { color: var(--text); font-weight: 500; }
+.goal-pill {
+  display: inline-block; margin-top: 6px; padding: 2px 10px;
+  border-radius: var(--r-full); box-shadow: inset 0 0 0 1px #ff5a1f59;
+  color: var(--text); font-size: 13px; line-height: 18px; font-weight: 600;
+}
+.goal-pill[hidden] { display: none; }
 
 .muscle-blurb { margin-top: 16px; color: var(--text-2); }
 .joint-note { display: block; margin-top: 4px; font-size: 13px; line-height: 18px; font-weight: 500; }
@@ -400,7 +503,7 @@ details[open] .ex-toggle svg { transform: rotate(180deg); }
   content: counter(ex-step); position: absolute; left: 0; top: 0;
   width: 21px; height: 21px; border-radius: 50%;
   display: grid; place-items: center;
-  font-size: 12px; font-weight: 700; color: #0d0b0b; background: var(--text-2);
+  font-size: 13px; font-weight: 700; color: #0d0b0b; background: var(--text-2);
 }
 
 .ex-avoid { border-left: 2px solid var(--ember); padding-left: 12px; }
@@ -447,7 +550,7 @@ details[open] .ex-toggle svg { transform: rotate(180deg); }
 
 .sheet-h {
   margin: 24px 0 0; padding-top: 16px; border-top: 1px solid var(--line);
-  font-size: 11px; line-height: 14px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  font-size: 13px; line-height: 16px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--text-2);
 }
 .sheet-steps { margin: 12px 0 0; padding: 0; list-style: none; counter-reset: step; display: grid; gap: 10px; }
@@ -482,6 +585,27 @@ details[open] .ex-toggle svg { transform: rotate(180deg); }
 .btn-quiet { margin-top: 12px; background: var(--thumb); color: var(--text); box-shadow: inset 0 0 0 1px #ff5a1f2e; }
 .btn-quiet:hover { background: #2e2523; }
 
+/* ------------------------------------------------------------- peek sheet */
+
+/* Opened by press-and-hold on the map, or by any ⋯ button. Three thumb-sized actions, the
+   primary one first. Swipe down, tap outside or Esc closes it. */
+.peek {
+  width: 100%; max-width: 520px;
+  margin: auto auto 0; padding: 0;
+  border: 0; border-radius: var(--r) var(--r) 0 0;
+  background: var(--raised); color: var(--text);
+  box-shadow: inset 0 1px 0 var(--hairline);
+  touch-action: none;
+}
+.peek::backdrop { background: #0d0b0bd9; }
+.peek-body { padding: 10px 20px calc(16px + env(safe-area-inset-bottom)); }
+.peek-grab { display: block; width: 40px; height: 4px; margin: 0 auto 14px; border-radius: 2px; background: var(--line); }
+.peek-title { font-size: 28px; line-height: 32px; font-weight: 800; letter-spacing: -0.02em; color: #fff; }
+.peek-n { margin-top: 2px; color: var(--text-2); }
+.peek-status { min-height: 22px; margin-top: 6px; color: var(--ember); font-weight: 600; }
+.peek-actions { display: grid; gap: 10px; margin-top: 8px; }
+.peek .btn { min-height: 56px; margin: 0; font-size: 17px; }
+
 /* ------------------------------------------------------------------- motion */
 
 @media (prefers-reduced-motion: no-preference) {
@@ -492,6 +616,8 @@ details[open] .ex-toggle svg { transform: rotate(180deg); }
   details[open] .ex-body { animation: ga-fade 200ms ease-out both; }
   .sheet[open] { animation: ga-sheet 280ms var(--ease-out) both; }
   .sheet[open]::backdrop { animation: ga-fade 200ms ease-out both; }
+  .peek[open] { animation: ga-sheet 200ms var(--ease-out) both; }
+  .peek[open]::backdrop { animation: ga-fade 160ms ease-out both; }
 }
 
 @keyframes ga-sheet {
@@ -525,5 +651,5 @@ details[open] .ex-toggle svg { transform: rotate(180deg); }
   .hero-photo { border-radius: 0 0 var(--r) var(--r); }
   .muscle-head { margin: 0; }
   .exercises { margin: 0; }
-  .sheet { margin: auto; border-radius: var(--r); }
+  .sheet, .peek { margin: auto; border-radius: var(--r); }
 }

@@ -1,12 +1,16 @@
 // Gains Atlas — tap a body part, get the exercises. One vanilla module, no build step.
 import { MUSCLES, BY_MUSCLE } from './muscles.js';
 import { EXERCISES, EQUIPMENT_LABEL, exercisesFor } from './exercises.js';
-import { FRONT_FIGURE, BACK_FIGURE, VIEWBOX } from './body-map.js';
+import { FRONT_FIGURE, BACK_FIGURE, VIEWBOX, HITS, ringDistance, flatten } from './body-map.js';
 import { diagramFor } from './diagram.js';
+import { getGoals, isGoal, setGoal, onGoalsChange } from './goals.js';
+
+const HOME_KEY = 'ga.home.v1';
 
 const state = {
   muscle: null,
   view: 'front',
+  home: readHome(), // 'map' or 'list', remembered per device
   place: 'all',
   level: 'all',
   equipment: 'all',
@@ -15,6 +19,21 @@ const state = {
 const FIGURES = { front: FRONT_FIGURE, back: BACK_FIGURE };
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const INTRO_KEY = 'ga-intro-seen';
+
+// Touch. A hold is 500 ms (no shorter: gym hands rest on the screen), a finger that wanders more
+// than 12 px is a scroll or a drag, not a hold, and a miss within 28 px picks the nearest group.
+const HOLD_MS = 500;
+const MOVE_PX = 12;
+const NEAR_PX = 28;
+const GOALS_SHOWN = 4;
+
+function readHome() {
+  try {
+    return globalThis.localStorage?.getItem(HOME_KEY) === 'list' ? 'list' : 'map';
+  } catch {
+    return 'map';
+  }
+}
 
 // Everything shown as a number is counted from the data, never typed in.
 const MOVES = Object.fromEntries(MUSCLES.map((muscle) => [muscle.id, exercisesFor(muscle.id).length]));
@@ -29,6 +48,14 @@ const LIST_ORDER = [
 ];
 const rank = (muscle) => { const at = LIST_ORDER.indexOf(muscle.id); return at < 0 ? LIST_ORDER.length : at; };
 const BY_REGION = [...MUSCLES].sort((a, b) => rank(a) - rank(b));
+
+// The quick list runs head to toe by where each group is drawn: front groups, then back groups.
+const middleOf = (id, view) => Math.min(...HITS[view].filter((h) => h.id === id).map((h) => (h.box.y0 + h.box.y1) / 2));
+const headToToe = (view) => MUSCLES.filter((m) => m.view === view)
+  .map((m) => ({ m, y: middleOf(m.id, viewFor(m.id)) }))
+  .sort((a, b) => a.y - b.y)
+  .map(({ m }) => m);
+const PARTS = { front: headToToe('front'), back: headToToe('back') };
 
 const el = (id) => document.getElementById(id);
 const app = () => el('app');
@@ -50,50 +77,103 @@ function viewFor(id) {
 /** A small, decorative copy of a figure with one group lit. Not focusable: the page names it. */
 function miniFigure(id) {
   return FIGURES[viewFor(id)]
+    .replace(/<g class="hits"[\s\S]*?<\/g>/, '')
     .replace('class="figure"', 'class="figure mini is-engaged" aria-hidden="true" focusable="false"')
     .replace(/ role="button" tabindex="0"/g, ' tabindex="-1"')
     .replaceAll(`class="hotspot" data-muscle="${id}"`, `class="hotspot is-lit" data-muscle="${id}"`);
 }
 
-function chip(muscle) {
-  const n = MOVES[muscle.id];
-  return `<li><button class="chip" type="button" data-jump="${muscle.id}" aria-label="${escapeHtml(muscle.name)}, ${plural(n, 'movement')}">
-    <span class="chip-name">${escapeHtml(muscle.name)}</span><span class="chip-n">${n}</span></button></li>`;
+// Press and hold on the map opens the same sheet as this button. A long-press-only feature is
+// invisible to keyboard and screen-reader users (and to anyone who never guesses to hold), so
+// every place that names a body part also carries this plain, focusable ⋯ button.
+function moreButton(muscle) {
+  return `<button class="more" type="button" data-more="${muscle.id}" aria-haspopup="dialog" aria-label="More for ${escapeHtml(muscle.name)}: see the movements, or add to my goals"><span aria-hidden="true">⋯</span></button>`;
 }
 
-const hintFor = (view) => `${capital(view)} view · ${ON_VIEW[view].length} target areas. Tap one.`;
+function chip(muscle) {
+  const n = MOVES[muscle.id];
+  return `<li class="chip-row"><button class="chip" type="button" data-jump="${muscle.id}" aria-label="${escapeHtml(muscle.name)}, ${plural(n, 'movement')}">
+    <span class="chip-name">${escapeHtml(muscle.name)}</span><span class="chip-n">${n}</span></button>${moreButton(muscle)}</li>`;
+}
+
+function partRow(muscle) {
+  const n = MOVES[muscle.id];
+  return `<li class="part-row"><button class="part" type="button" data-jump="${muscle.id}">
+    <span class="part-name">${escapeHtml(muscle.name)}</span><span class="part-n">${plural(n, 'movement')}</span></button>${moreButton(muscle)}</li>`;
+}
+
+const hintFor = (view) => (state.home === 'list'
+  ? `All ${MUSCLES.length} body parts, head to toe.`
+  : `${capital(view)} · ${ON_VIEW[view].length} areas. Tap one; hold for options.`);
 
 /* ------------------------------------------------------------------ views */
 
 function viewMap() {
   const on = (view) => state.view === view;
+  const list = state.home === 'list';
   return `
-    <section class="hero">
-      <div class="hero-photo" role="img" aria-label="A bodybuilder on stage, lit from the side">
-        <h1 class="hero-mark"><span class="mark-1">Gains</span> <span class="mark-2">Atlas</span></h1>
-      </div>
-      <div class="hero-copy">
-        <p class="lede">A gym aid for building specific muscles. Tap a body part, get every movement for it.</p>
-        <p class="hero-stat"><strong>${EXERCISES.length}</strong> movements · <strong>${MUSCLES.length}</strong> body parts</p>
-        <p class="hero-free">Free to use. Works offline once installed.</p>
-      </div>
-    </section>
+    <div class="home-first${list ? ' is-list' : ''}" id="home-first">
+      <section class="hero">
+        <div class="hero-photo" role="img" aria-label="A bodybuilder on stage, lit from the side">
+          <h1 class="hero-mark"><span class="mark-1">Gains</span> <span class="mark-2">Atlas</span></h1>
+        </div>
+        <div class="hero-copy">
+          <p class="lede">Tap a body part to see every movement.</p>
+          <p class="hero-stat"><strong>${EXERCISES.length}</strong> movements · <strong>${MUSCLES.length}</strong> body parts · works offline</p>
+        </div>
+      </section>
 
-    <div class="map-tabs" role="tablist" aria-label="Body view">
-      <button class="tab${on('front') ? ' is-on' : ''}" id="tab-front" role="tab" aria-selected="${on('front')}" aria-controls="map" type="button">Front</button>
-      <button class="tab${on('back') ? ' is-on' : ''}" id="tab-back" role="tab" aria-selected="${on('back')}" aria-controls="map" type="button">Back</button>
-    </div>
-    <p class="map-hint" id="map-hint">${hintFor(state.view)}</p>
+      <section class="goals" id="goals" aria-labelledby="goals-h" hidden></section>
 
-    <div class="stage">
-      <div class="map" id="map" data-view="${state.view}">${FIGURES[state.view]}</div>
-      <div class="map-label" id="map-label" aria-hidden="true"><span class="map-label-name"></span><span class="map-label-n"></span></div>
+      <div class="map-bar">
+        <div class="map-tabs" role="tablist" aria-label="Body view">
+          <button class="tab${on('front') ? ' is-on' : ''}" id="tab-front" role="tab" aria-selected="${on('front')}" aria-controls="map" type="button">Front</button>
+          <button class="tab${on('back') ? ' is-on' : ''}" id="tab-back" role="tab" aria-selected="${on('back')}" aria-controls="map" type="button">Back</button>
+        </div>
+        <div class="map-tabs home-switch" role="group" aria-label="Show body parts as">
+          <button class="tab${list ? '' : ' is-on'}" id="home-map" type="button" aria-pressed="${!list}">Body map</button>
+          <button class="tab${list ? ' is-on' : ''}" id="home-list" type="button" aria-pressed="${list}">List</button>
+        </div>
+      </div>
+      <p class="map-hint" id="map-hint">${hintFor(state.view)}</p>
+
+      <div class="stage" id="stage"${list ? ' hidden' : ''}>
+        <div class="map" id="map" data-view="${state.view}">${FIGURES[state.view]}</div>
+        <div class="map-label" id="map-label" aria-hidden="true"><span class="map-label-name"></span><span class="map-label-n"></span></div>
+      </div>
+
+      <div class="parts" id="parts"${list ? '' : ' hidden'}>
+        <h2 class="parts-h" id="parts-front">Front</h2>
+        <ul class="part-list" aria-labelledby="parts-front">${PARTS.front.map(partRow).join('')}</ul>
+        <h2 class="parts-h" id="parts-back">Back</h2>
+        <ul class="part-list" aria-labelledby="parts-back">${PARTS.back.map(partRow).join('')}</ul>
+      </div>
     </div>
 
     <p class="overline" id="all-groups">All target areas</p>
     <ul class="chips" aria-labelledby="all-groups">${BY_REGION.map(chip).join('')}</ul>
 
     <p class="disclaimer">General training guidance, not medical advice. If something hurts, stop and ask a coach or a doctor.</p>`;
+}
+
+/** The "My goals" strip on home: hidden when empty, up to four chips, then "All goals (n)". */
+let goalsExpanded = false;
+function renderGoals() {
+  const box = el('goals');
+  if (!box) return;
+  const goals = getGoals();
+  box.hidden = goals.length === 0;
+  el('home-first')?.classList.toggle('has-goals', goals.length > 0);
+  if (!goals.length) { box.innerHTML = ''; goalsExpanded = false; return; }
+  const shown = goalsExpanded ? goals : goals.slice(0, GOALS_SHOWN);
+  const more = goals.length > GOALS_SHOWN
+    ? `<li><button class="goal-all" id="goals-all" type="button" aria-expanded="${goalsExpanded}">${goalsExpanded ? 'Fewer' : `All goals (${goals.length})`}</button></li>`
+    : '';
+  box.innerHTML = `<h2 class="goals-h" id="goals-h">My goals</h2>
+    <ul class="goal-chips">${shown.map((id) => {
+      const muscle = BY_MUSCLE[id];
+      return `<li><button class="goal-chip" type="button" data-jump="${id}" aria-label="${escapeHtml(muscle.name)}, ${plural(MOVES[id], 'movement')}"><span class="goal-name">${escapeHtml(muscle.name)}</span><span class="goal-n">${MOVES[id]}</span></button></li>`;
+    }).join('')}${more}</ul>`;
 }
 
 const LEVELS = ['all', 'beginner', 'intermediate', 'advanced'];
@@ -111,7 +191,9 @@ function viewMuscle(muscle) {
         <p class="overline">${escapeHtml(muscle.latin)}</p>
         <h1>${escapeHtml(muscle.name)}</h1>
         <p class="count" aria-live="polite"><b>${list.length}</b> of <b>${total}</b> exercise${total === 1 ? '' : 's'}</p>
+        <p class="goal-pill" id="goal-pill"${isGoal(muscle.id) ? '' : ' hidden'}>In my goals</p>
       </div>
+      ${moreButton(muscle)}
     </header>
     <p class="muscle-blurb">${escapeHtml(muscle.blurb)}${muscle.joint ? ' <span class="joint-note">A joint, not a muscle: these movements load the muscles and tendons that move it.</span>' : ''}</p>
 
@@ -214,9 +296,6 @@ function wireMuscle(muscle) {
   el('f-place').addEventListener('change', refilter('place'));
   el('f-level').addEventListener('change', refilter('level'));
   el('f-equipment').addEventListener('change', refilter('equipment'));
-  document.querySelectorAll('[data-jump]').forEach((button) => {
-    button.addEventListener('click', () => openMuscle(button.dataset.jump));
-  });
 }
 
 /**
@@ -307,12 +386,14 @@ function bodyEdge(svg, top, bottom) {
   let rows = CONTOURS.get(svg);
   if (!rows) {
     rows = new Array(200).fill(Infinity); // one row per 2 units of height
-    const path = svg.querySelector('.skin');
-    const length = path ? path.getTotalLength() : 0;
-    for (let at = 0; at <= length; at += 0.5) {
-      const point = path.getPointAtLength(at);
-      const row = Math.floor(point.y / 2);
-      if (row >= 0 && row < rows.length) rows[row] = Math.min(rows[row], point.x);
+    // Flattened in plain JS (points <= 1 unit apart): sampling the path with getPointAtLength
+    // took most of a second on the first tap, which is exactly when feedback must be instant.
+    const d = svg.querySelector('.skin')?.getAttribute('d') ?? '';
+    for (const ring of flatten(d)) {
+      for (const [x, y] of ring) {
+        const row = Math.floor(y / 2);
+        if (row >= 0 && row < rows.length) rows[row] = Math.min(rows[row], x);
+      }
     }
     CONTOURS.set(svg, rows);
   }
@@ -350,34 +431,112 @@ function sweep(svg) {
   window.setTimeout(() => svg.classList.remove('is-intro'), last);
 }
 
+/** The group nearest a screen point, if it is within NEAR_PX of one; else null. */
+function nearestGroup(map, x, y) {
+  const svg = map.querySelector('svg');
+  const ctm = svg?.getScreenCTM();
+  if (!ctm) return null;
+  const inv = ctm.inverse();
+  const point = [inv.a * x + inv.c * y + inv.e, inv.b * x + inv.d * y + inv.f];
+  let best = null;
+  let bestPx = Infinity;
+  for (const item of HITS[map.dataset.view] ?? []) {
+    const px = ringDistance(point, item.ring) * ctm.a;
+    if (px < bestPx) { bestPx = px; best = item.id; }
+  }
+  return bestPx <= NEAR_PX ? best : null;
+}
+
 function wireMap() {
   document.body.classList.add('is-home');
   const map = el('map');
+  const stage = el('stage');
   let going = false;
+  let press = null; // the finger that is down: { id, x, y, pointerId, timer }
+  let held = false; // a hold opened the sheet: swallow the click its release produces
+  let dragged = false; // the finger wandered: a drag is neither a tap nor a hold
 
-  // Tap: the group lights and the body dims for a beat, then the body-part screen opens.
-  const pick = (target) => {
-    const hit = target.closest('[data-muscle]');
-    if (!hit || going) return;
-    const id = hit.dataset.muscle;
-    if (reducedMotion()) { openMuscle(id); return; }
-    going = true;
-    showGroup(map, id, 'lit');
-    window.setTimeout(() => openMuscle(id), 220);
+  // A drawn group, its halo, or failing both the nearest group within NEAR_PX. Else nothing:
+  // a tap on really empty stage never navigates.
+  const groupAt = (event) => {
+    const hit = event.target.closest?.('[data-muscle], [data-hit]');
+    if (hit) return hit.dataset.muscle ?? hit.dataset.hit;
+    if (!stage.contains(event.target)) return null;
+    return nearestGroup(map, event.clientX, event.clientY);
   };
 
-  map.addEventListener('click', (event) => pick(event.target));
-  map.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      pick(event.target);
+  const go = (id) => {
+    if (going) return;
+    going = true;
+    showGroup(map, id, 'lit');
+    openMuscle(id);
+  };
+  const release = () => {
+    if (press) clearTimeout(press.timer);
+    press = null;
+  };
+
+  // The group lights on the first frame the finger is down; nothing about the page moves.
+  stage.addEventListener('pointerdown', (event) => {
+    held = false;
+    dragged = false;
+    if (going || event.button > 0) return;
+    const id = groupAt(event);
+    release();
+    if (!id) return;
+    showGroup(map, id, 'lit');
+    press = {
+      id, x: event.clientX, y: event.clientY, pointerId: event.pointerId,
+      timer: window.setTimeout(() => {
+        press = null;
+        held = true;
+        openPeek(id, () => { if (!going) showGroup(map, null); });
+      }, HOLD_MS),
+    };
+  });
+  // A finger that wanders more than MOVE_PX is scrolling or dragging, not holding or tapping:
+  // drop the hold and the light, and let the release open nothing. (Opening whatever group the
+  // finger ended on would be a navigation nobody asked for.)
+  stage.addEventListener('pointermove', (event) => {
+    if (!press || event.pointerId !== press.pointerId) return;
+    if (Math.hypot(event.clientX - press.x, event.clientY - press.y) > MOVE_PX) {
+      release();
+      dragged = true;
+      if (!going) showGroup(map, null);
     }
+  });
+  stage.addEventListener('pointerup', release);
+  // The browser took the gesture (a scroll began): no tap, no hold, no light.
+  stage.addEventListener('pointercancel', () => {
+    release();
+    if (!going) showGroup(map, null);
+  });
+  // A long press must not bring up the browser's own menu or start a text selection.
+  stage.addEventListener('contextmenu', (event) => event.preventDefault());
+
+  stage.addEventListener('click', (event) => {
+    if (held) { held = false; return; }
+    if (dragged) { dragged = false; return; }
+    if (going) return;
+    const id = groupAt(event);
+    if (id) go(id);
+    else showGroup(map, null);
+  });
+  map.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    const hit = event.target.closest('[data-muscle]');
+    if (!hit || going) return;
+    event.preventDefault();
+    const id = hit.dataset.muscle;
+    showGroup(map, id, 'lit');
+    if (reducedMotion()) go(id);
+    else window.setTimeout(() => go(id), 120);
   });
 
   map.addEventListener('pointerover', (event) => {
-    if (going || event.pointerType === 'touch') return;
-    const hit = event.target.closest?.('[data-muscle]');
-    if (hit) showGroup(map, hit.dataset.muscle, 'preview');
+    if (going || press || event.pointerType === 'touch') return;
+    const hit = event.target.closest?.('[data-muscle], [data-hit]');
+    if (hit) showGroup(map, hit.dataset.muscle ?? hit.dataset.hit, 'preview');
     else if (!map.contains(document.activeElement)) showGroup(map, null);
   });
   map.addEventListener('focusin', (event) => {
@@ -385,11 +544,11 @@ function wireMap() {
     const hit = event.target.closest?.('[data-muscle]');
     if (hit) showGroup(map, hit.dataset.muscle, 'lit');
   });
-  map.addEventListener('pointerleave', () => {
-    if (!going && !map.contains(document.activeElement)) showGroup(map, null);
+  map.addEventListener('pointerleave', (event) => {
+    if (!going && !press && event.pointerType !== 'touch' && !map.contains(document.activeElement)) showGroup(map, null);
   });
   map.addEventListener('focusout', (event) => {
-    if (!going && !map.contains(event.relatedTarget)) showGroup(map, null);
+    if (!going && !press && !map.contains(event.relatedTarget)) showGroup(map, null);
   });
 
   const front = el('tab-front');
@@ -416,12 +575,126 @@ function wireMap() {
     next.click();
   }));
 
-  document.querySelectorAll('[data-jump]').forEach((button) => {
-    button.addEventListener('click', () => openMuscle(button.dataset.jump));
-  });
+  // Body map or list: one or the other, never both, remembered on this device.
+  const setHome = (mode) => {
+    state.home = mode;
+    try { localStorage.setItem(HOME_KEY, mode); } catch { /* storage blocked: this visit only */ }
+    const list = mode === 'list';
+    el('home-first').classList.toggle('is-list', list);
+    el('stage').hidden = list;
+    el('parts').hidden = !list;
+    el('home-map').classList.toggle('is-on', !list);
+    el('home-list').classList.toggle('is-on', list);
+    el('home-map').setAttribute('aria-pressed', String(!list));
+    el('home-list').setAttribute('aria-pressed', String(list));
+    el('map-hint').textContent = hintFor(state.view);
+    showGroup(map, null);
+  };
+  el('home-map').addEventListener('click', () => setHome('map'));
+  el('home-list').addEventListener('click', () => setHome('list'));
 
+  renderGoals();
   const svg = map.querySelector('svg');
-  if (svg) introSweep(svg);
+  if (svg && state.home === 'map') introSweep(svg);
+}
+
+/* -------------------------------------------------------------- the peek */
+
+let peekFor = null;
+let peekClosed = null;
+
+/** One bottom sheet for every body part: see the movements, add to my goals, or close. */
+function peekSheet() {
+  let sheet = el('peek');
+  if (sheet) return sheet;
+  sheet = document.createElement('dialog');
+  sheet.className = 'peek';
+  sheet.id = 'peek';
+  sheet.setAttribute('aria-labelledby', 'peek-title');
+  sheet.setAttribute('aria-describedby', 'peek-n');
+  sheet.innerHTML = `
+    <div class="peek-body">
+      <span class="peek-grab" aria-hidden="true"></span>
+      <h2 class="peek-title" id="peek-title"></h2>
+      <p class="peek-n" id="peek-n"></p>
+      <p class="peek-status" id="peek-status" role="status" aria-live="polite"></p>
+      <div class="peek-actions">
+        <button class="btn btn-ember" type="button" data-peek="see"></button>
+        <button class="btn btn-quiet" type="button" data-peek="goal"></button>
+        <button class="btn btn-quiet" type="button" data-peek="close">Close</button>
+      </div>
+    </div>`;
+  document.body.append(sheet);
+
+  const goalButton = sheet.querySelector('[data-peek="goal"]');
+  const label = () => {
+    const on = isGoal(peekFor);
+    goalButton.textContent = on ? 'Remove from my goals' : 'Add to my goals';
+    goalButton.setAttribute('aria-pressed', String(on));
+  };
+  sheet.addEventListener('ga:label', label);
+
+  let swiped = false;
+  let downOnSheet = false;
+  let start = null;
+  sheet.addEventListener('pointerdown', (event) => {
+    swiped = false;
+    downOnSheet = event.target === sheet;
+    start = { x: event.clientX, y: event.clientY };
+  });
+  // Swipe down anywhere on the sheet closes it, as a bottom sheet should.
+  sheet.addEventListener('pointerup', (event) => {
+    if (!start) return;
+    const dy = event.clientY - start.y;
+    const dx = Math.abs(event.clientX - start.x);
+    start = null;
+    if (dy > 64 && dy > dx * 1.5) { swiped = true; sheet.close(); }
+  });
+  sheet.addEventListener('click', (event) => {
+    if (swiped) { swiped = false; return; }
+    // A tap on the dimmed page around the sheet lands on the <dialog> itself.
+    if (event.target === sheet) { if (downOnSheet) sheet.close(); return; }
+    const action = event.target.closest('[data-peek]')?.dataset.peek;
+    if (action === 'close') sheet.close();
+    if (action === 'goal') {
+      const on = !isGoal(peekFor);
+      setGoal(peekFor, on);
+      el('peek-status').textContent = on ? 'Added to your goals' : 'Removed from your goals';
+      label();
+    }
+    if (action === 'see') {
+      const id = peekFor;
+      sheet.close();
+      state.place = 'all';
+      state.level = 'all';
+      state.equipment = 'all';
+      openMuscle(id);
+    }
+  });
+  sheet.addEventListener('close', () => {
+    const done = peekClosed;
+    peekClosed = null;
+    done?.();
+  });
+  return sheet;
+}
+
+function openPeek(id, onClose = null) {
+  const muscle = BY_MUSCLE[id];
+  if (!muscle) return;
+  const sheet = peekSheet();
+  if (sheet.open) sheet.close();
+  peekFor = id;
+  peekClosed = onClose;
+  const n = MOVES[id];
+  el('peek-title').textContent = muscle.name;
+  el('peek-n').textContent = plural(n, 'movement');
+  el('peek-status').textContent = '';
+  sheet.querySelector('[data-peek="see"]').textContent = `See the ${n} movements`;
+  sheet.dispatchEvent(new Event('ga:label'));
+  sheet.showModal();
+  // The one vibration in the app: the nudge that says the sheet is up.
+  navigator.vibrate?.(8);
 }
 
 function route() {
@@ -442,6 +715,23 @@ function route() {
 
 function boot() {
   window.addEventListener('hashchange', route);
+  // One listener for every body-part button the app draws: chips, list rows, goals, the ⋯ buttons.
+  app().addEventListener('click', (event) => {
+    const more = event.target.closest('[data-more]');
+    if (more) { openPeek(more.dataset.more); return; }
+    const jump = event.target.closest('[data-jump]');
+    if (jump) { openMuscle(jump.dataset.jump); return; }
+    if (event.target.closest('#goals-all')) {
+      goalsExpanded = !goalsExpanded;
+      renderGoals();
+      el('goals-all')?.focus();
+    }
+  });
+  onGoalsChange(() => {
+    renderGoals();
+    const pill = el('goal-pill');
+    if (pill && state.muscle) pill.hidden = !isGoal(state.muscle);
+  });
   route();
   // Offline after the first load: sw.js keeps the app's own files and nothing else.
   if ('serviceWorker' in navigator && window.isSecureContext) {
