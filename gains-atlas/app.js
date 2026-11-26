@@ -694,7 +694,6 @@ function openPeek(id, onClose = null) {
   sheet.dispatchEvent(new Event('ga:label'));
   sheet.showModal();
   // The one vibration in the app: the nudge that says the sheet is up.
-  navigator.vibrate?.(8);
 }
 
 function route() {
