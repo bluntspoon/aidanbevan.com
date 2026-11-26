@@ -4,6 +4,7 @@ import { EXERCISES, EQUIPMENT_LABEL, exercisesFor } from './exercises.js';
 import { FRONT_FIGURE, BACK_FIGURE, VIEWBOX, HITS, ringDistance, flatten } from './body-map.js';
 import { diagramFor } from './diagram.js';
 import { getGoals, isGoal, setGoal, onGoalsChange } from './goals.js';
+import { LEVEL_CHOICES, LEVEL_NOTE, choiceFor, movesFor, levelCounts, usableLevel, startLabel } from './pick.js';
 
 const HOME_KEY = 'ga.home.v1';
 
@@ -118,7 +119,7 @@ function viewMap() {
           <h1 class="hero-mark"><span class="mark-1">Gains</span> <span class="mark-2">Atlas</span></h1>
         </div>
         <div class="hero-copy">
-          <p class="lede">Tap a body part to see every movement.</p>
+          <p class="lede">Tap a body part, then pick a level.</p>
           <p class="hero-stat"><strong>${EXERCISES.length}</strong> movements · <strong>${MUSCLES.length}</strong> body parts · works offline</p>
         </div>
       </section>
@@ -150,6 +151,8 @@ function viewMap() {
       </div>
     </div>
 
+    <dialog class="pick" id="pick" aria-labelledby="pick-name" aria-describedby="pick-blurb"><div class="pick-body"></div></dialog>
+
     <p class="overline" id="all-groups">All target areas</p>
     <ul class="chips" aria-labelledby="all-groups">${BY_REGION.map(chip).join('')}</ul>
 
@@ -176,12 +179,67 @@ function renderGoals() {
     }).join('')}${more}</ul>`;
 }
 
-const LEVELS = ['all', 'beginner', 'intermediate', 'advanced'];
 const option = (value, label, current) => `<option value="${value}"${current === value ? ' selected' : ''}>${label}</option>`;
+const JOINT_NOTE = 'A joint, not a muscle: these movements load the muscles and tendons that move it.';
+
+/**
+ * The three level choices as one radio group of big buttons, each with its count under it. The map's
+ * panel and the group screen draw the same control, so the labels can never drift apart. With
+ * `disableEmpty`, a choice with nothing in it can't be picked (the panel never offers a dead end).
+ */
+function levelRow(id, level, filters = {}, { disableEmpty = false } = {}) {
+  const counts = levelCounts(id, filters);
+  return `<div class="levels" role="radiogroup" aria-label="Level">${LEVEL_CHOICES.map((choice) => {
+    const on = choice.value === level;
+    const n = counts[choice.value];
+    const off = disableEmpty && n === 0 && !on;
+    return `<button class="level-choice${on ? ' is-on' : ''}" type="button" role="radio" aria-checked="${on}" tabindex="${on ? 0 : -1}" data-level="${choice.value}"${off ? ' disabled' : ''} aria-label="${escapeHtml(choice.label)}, ${plural(n, 'movement')}"><span class="level-name">${escapeHtml(choice.label)}</span><span class="level-n">${n}</span></button>`;
+  }).join('')}</div>`;
+}
+
+/** Arrow keys move the choice inside a level radio group, as a radio group should. */
+function wireLevelKeys(root, choose) {
+  root.addEventListener('keydown', (event) => {
+    const radio = event.target.closest?.('.level-choice');
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[event.key];
+    if (!radio || !step) return;
+    event.preventDefault();
+    const all = [...radio.parentElement.querySelectorAll('.level-choice:not([disabled])')];
+    const next = all[(all.indexOf(radio) + step + all.length) % all.length];
+    choose(next.dataset.level);
+  });
+}
+
+/** What the map's selection panel says for one group at one level. Every number is counted. */
+function pickContent(id, wanted = 'all') {
+  const muscle = BY_MUSCLE[id];
+  const level = usableLevel(id, wanted);
+  const n = movesFor(id, { level }).length;
+  const fellBack = level !== choiceFor(wanted).value;
+  const saved = isGoal(id);
+  return `
+    <p class="overline pick-latin">${escapeHtml(muscle.latin)}</p>
+    <h2 class="pick-name" id="pick-name">${escapeHtml(muscle.name)}</h2>
+    <p class="pick-blurb" id="pick-blurb">${escapeHtml(muscle.blurb)}${muscle.joint ? ` <span class="joint-note">${JOINT_NOTE}</span>` : ''}</p>
+    <p class="pick-n" id="pick-n">${fellBack
+    ? `No ${escapeHtml(choiceFor(wanted).label)} movements here, so this shows all ${MOVES[id]}.`
+    : `${plural(MOVES[id], 'movement')} here`}</p>
+    ${levelRow(id, level, {}, { disableEmpty: true })}
+    <p class="pick-note">${LEVEL_NOTE}</p>
+    <div class="pick-actions">
+      <button class="btn btn-ember pick-start" type="button" data-pick="start" data-n="${n}">${startLabel(n)}</button>
+      <button class="pick-save" type="button" data-pick="save" aria-pressed="${saved}">${saved ? 'Saved to goals' : 'Save for later'}</button>
+    </div>
+    <button class="pick-close" type="button" data-pick="close" aria-label="Close"><span aria-hidden="true">×</span></button>`;
+}
+
+let levelsOpen = false; // the group screen's level row, opened from the "You picked" line
 
 function viewMuscle(muscle) {
-  const list = exercisesFor(muscle.id, state);
-  const total = MOVES[muscle.id];
+  const level = choiceFor(state.level);
+  const list = movesFor(muscle.id, state);
+  const atLevel = movesFor(muscle.id, { level: level.value }).length;
+  const n = list.length < atLevel ? `${list.length} of ${plural(atLevel, 'movement')}` : plural(list.length, 'movement');
 
   return `
     <button class="back" id="back" type="button"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M10 3.5L5.5 8l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Body map</button>
@@ -190,22 +248,25 @@ function viewMuscle(muscle) {
       <div class="muscle-title">
         <p class="overline">${escapeHtml(muscle.latin)}</p>
         <h1>${escapeHtml(muscle.name)}</h1>
-        <p class="count" aria-live="polite"><b>${list.length}</b> of <b>${total}</b> exercise${total === 1 ? '' : 's'}</p>
         <p class="goal-pill" id="goal-pill"${isGoal(muscle.id) ? '' : ' hidden'}>In my goals</p>
       </div>
       ${moreButton(muscle)}
     </header>
-    <p class="muscle-blurb">${escapeHtml(muscle.blurb)}${muscle.joint ? ' <span class="joint-note">A joint, not a muscle: these movements load the muscles and tendons that move it.</span>' : ''}</p>
+
+    <button class="picked" id="picked" type="button" aria-expanded="${levelsOpen}" aria-controls="level-pick" aria-label="You picked ${escapeHtml(muscle.name)}, ${escapeHtml(level.label)}, ${n}. Change level">
+      <span class="picked-text" aria-live="polite"><span class="picked-over">You picked: </span><span class="picked-what"><b>${escapeHtml(muscle.name)}</b> · <b data-picked-level="${level.value}">${escapeHtml(level.label)}</b> · <b>${n}</b></span></span>
+      <span class="picked-change" aria-hidden="true">Change</span>
+    </button>
+    <div class="level-pick" id="level-pick"${levelsOpen ? '' : ' hidden'}>
+      ${levelRow(muscle.id, level.value, { place: state.place, equipment: state.equipment })}
+      <p class="pick-note">${LEVEL_NOTE}</p>
+    </div>
+    ${muscle.joint ? `<p class="joint-note muscle-joint">${JOINT_NOTE}</p>` : ''}
 
     <div class="filters" role="group" aria-label="Filter the list">
       <label class="filter${state.place !== 'all' ? ' is-set' : ''}"><span>Where</span>
         <select id="f-place">
           ${option('all', 'Anywhere', state.place)}${option('home', 'Home', state.place)}${option('gym', 'Gym', state.place)}
-        </select>
-      </label>
-      <label class="filter${state.level !== 'all' ? ' is-set' : ''}"><span>Level</span>
-        <select id="f-level">
-          ${LEVELS.map((value) => option(value, value === 'all' ? 'Any level' : capital(value), state.level)).join('')}
         </select>
       </label>
       <label class="filter${state.equipment !== 'all' ? ' is-set' : ''}"><span>Kit</span>
@@ -219,10 +280,23 @@ function viewMuscle(muscle) {
     ${list.length ? `<ul class="exercises">${list.map(exerciseRow).join('')}</ul>`
       : '<p class="empty">Nothing matches those filters. Widen one and the list fills up again.</p>'}
 
+    <p class="muscle-blurb"><b>${escapeHtml(muscle.name)}.</b> ${escapeHtml(muscle.blurb)}</p>
+
     <div class="other">
       <p class="eyebrow">Also on the map</p>
       <ul class="chips">${MUSCLES.filter((m) => m.id !== muscle.id).map(chip).join('')}</ul>
     </div>`;
+}
+
+/** The group screen as it would render for these filters, for tests that hold the picker to it. */
+function viewMuscleFor(id, filters = {}) {
+  const saved = { ...state };
+  Object.assign(state, { place: 'all', level: 'all', equipment: 'all' }, filters);
+  try {
+    return viewMuscle(BY_MUSCLE[id]);
+  } finally {
+    Object.assign(state, saved);
+  }
 }
 
 const ICON_CHEVRON = '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -266,19 +340,30 @@ function exerciseRow(exercise, index) {
 
 /* ------------------------------------------------------------ interaction */
 
-function openMuscle(id) {
+/**
+ * Open a group's screen. `level` is the level choice to apply; `fresh` also clears where and kit,
+ * so the list is exactly as long as the panel or peek that sent you here promised.
+ */
+function openMuscle(id, { level = 'all', fresh = false } = {}) {
   const muscle = BY_MUSCLE[id];
   if (!muscle) return;
+  // The panel's history entry becomes the group screen's, so Back from the list lands on the map,
+  // not on an invisible "panel open" step.
+  const replace = pickEntry;
+  dismissPick();
   // Where you train carries over; a level or kit picked for one body part does not, or the next
   // list opens half-empty for no visible reason.
-  if (state.muscle !== id) {
-    state.level = 'all';
+  if (state.muscle !== id || fresh) {
+    state.level = choiceFor(level).value;
     state.equipment = 'all';
+    levelsOpen = false;
   }
+  if (fresh) state.place = 'all';
   state.muscle = id;
   state.view = viewFor(id);
   app().innerHTML = viewMuscle(muscle);
-  location.hash = `#/${id}`;
+  if (replace) history.replaceState(null, '', `#/${id}`);
+  else location.hash = `#/${id}`;
   wireMuscle(muscle);
   window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
 }
@@ -286,16 +371,34 @@ function openMuscle(id) {
 function wireMuscle(muscle) {
   document.body.classList.remove('is-home');
   el('back').addEventListener('click', () => { location.hash = '#/'; });
-  const refilter = (key) => (event) => {
-    state[key] = event.target.value;
+  const redraw = (focusId) => {
     app().innerHTML = viewMuscle(muscle);
     wireMuscle(muscle);
     app().classList.add('no-stagger');
-    el(`f-${key}`)?.focus();
+    (typeof focusId === 'string' ? el(focusId) : focusId?.())?.focus();
+  };
+  const refilter = (key) => (event) => {
+    state[key] = event.target.value;
+    redraw(`f-${key}`);
   };
   el('f-place').addEventListener('change', refilter('place'));
-  el('f-level').addEventListener('change', refilter('level'));
   el('f-equipment').addEventListener('change', refilter('equipment'));
+
+  // "You picked: …" opens the level row under it; a choice there redraws the list in place.
+  el('picked').addEventListener('click', () => {
+    levelsOpen = !levelsOpen;
+    redraw(() => (levelsOpen ? app().querySelector('.level-choice[aria-checked="true"]') : el('picked')));
+  });
+  const choose = (value) => {
+    state.level = choiceFor(value).value;
+    redraw(() => app().querySelector('.level-choice[aria-checked="true"]'));
+  };
+  const row = el('level-pick');
+  row.addEventListener('click', (event) => {
+    const choice = event.target.closest('.level-choice');
+    if (choice && !choice.disabled) choose(choice.dataset.level);
+  });
+  wireLevelKeys(row, choose);
 }
 
 /**
@@ -452,12 +555,17 @@ function wireMap() {
   const map = el('map');
   const stage = el('stage');
   let going = false;
+  picked = null;
+  pickEntry = false;
+  document.documentElement.classList.remove('pick-open');
+  wirePick();
+  const rest = () => showGroup(map, picked); // back to the selection, or to nothing
   let press = null; // the finger that is down: { id, x, y, pointerId, timer }
   let held = false; // a hold opened the sheet: swallow the click its release produces
   let dragged = false; // the finger wandered: a drag is neither a tap nor a hold
 
   // A drawn group, its halo, or failing both the nearest group within NEAR_PX. Else nothing:
-  // a tap on really empty stage never navigates.
+  // a tap on really empty stage clears the selection.
   const groupAt = (event) => {
     const hit = event.target.closest?.('[data-muscle], [data-hit]');
     if (hit) return hit.dataset.muscle ?? hit.dataset.hit;
@@ -465,11 +573,13 @@ function wireMap() {
     return nearestGroup(map, event.clientX, event.clientY);
   };
 
-  const go = (id) => {
+  // Tap 1 selects; tap 2 on the same group (or Start in the panel) goes.
+  const tap = (id) => {
     if (going) return;
-    going = true;
-    showGroup(map, id, 'lit');
-    openMuscle(id);
+    if (id && id === picked) { going = true; startPicked(); }
+    else if (id) selectGroup(id);
+    else if (picked) closePick({ restoreFocus: false });
+    else showGroup(map, null);
   };
   const release = () => {
     if (press) clearTimeout(press.timer);
@@ -490,7 +600,7 @@ function wireMap() {
       timer: window.setTimeout(() => {
         press = null;
         held = true;
-        openPeek(id, () => { if (!going) showGroup(map, null); });
+        openPeek(id, () => { if (!going && map.isConnected) rest(); });
       }, HOLD_MS),
     };
   });
@@ -502,14 +612,14 @@ function wireMap() {
     if (Math.hypot(event.clientX - press.x, event.clientY - press.y) > MOVE_PX) {
       release();
       dragged = true;
-      if (!going) showGroup(map, null);
+      if (!going) rest();
     }
   });
   stage.addEventListener('pointerup', release);
   // The browser took the gesture (a scroll began): no tap, no hold, no light.
   stage.addEventListener('pointercancel', () => {
     release();
-    if (!going) showGroup(map, null);
+    if (!going) rest();
   });
   // A long press must not bring up the browser's own menu or start a text selection.
   stage.addEventListener('contextmenu', (event) => event.preventDefault());
@@ -518,42 +628,39 @@ function wireMap() {
     if (held) { held = false; return; }
     if (dragged) { dragged = false; return; }
     if (going) return;
-    const id = groupAt(event);
-    if (id) go(id);
-    else showGroup(map, null);
+    tap(groupAt(event));
   });
   map.addEventListener('keydown', (event) => {
     if (event.key !== 'Enter' && event.key !== ' ') return;
     const hit = event.target.closest('[data-muscle]');
     if (!hit || going) return;
     event.preventDefault();
-    const id = hit.dataset.muscle;
-    showGroup(map, id, 'lit');
-    if (reducedMotion()) go(id);
-    else window.setTimeout(() => go(id), 120);
+    tap(hit.dataset.muscle);
   });
 
+  // With a group selected, hover leaves the selection alone (CSS :hover still tints the group).
   map.addEventListener('pointerover', (event) => {
-    if (going || press || event.pointerType === 'touch') return;
+    if (going || press || picked || event.pointerType === 'touch') return;
     const hit = event.target.closest?.('[data-muscle], [data-hit]');
     if (hit) showGroup(map, hit.dataset.muscle ?? hit.dataset.hit, 'preview');
-    else if (!map.contains(document.activeElement)) showGroup(map, null);
+    else if (!map.contains(document.activeElement)) rest();
   });
   map.addEventListener('focusin', (event) => {
-    if (going) return;
+    if (going || quietFocus) return;
     const hit = event.target.closest?.('[data-muscle]');
     if (hit) showGroup(map, hit.dataset.muscle, 'lit');
   });
   map.addEventListener('pointerleave', (event) => {
-    if (!going && !press && event.pointerType !== 'touch' && !map.contains(document.activeElement)) showGroup(map, null);
+    if (!going && !press && event.pointerType !== 'touch' && !map.contains(document.activeElement)) rest();
   });
   map.addEventListener('focusout', (event) => {
-    if (!going && !press && !map.contains(event.relatedTarget)) showGroup(map, null);
+    if (!going && !press && !map.contains(event.relatedTarget)) rest();
   });
 
   const front = el('tab-front');
   const back = el('tab-back');
   const show = (which) => {
+    if (picked) closePick({ restoreFocus: false });
     state.view = which;
     map.innerHTML = FIGURES[which];
     map.dataset.view = which;
@@ -577,6 +684,7 @@ function wireMap() {
 
   // Body map or list: one or the other, never both, remembered on this device.
   const setHome = (mode) => {
+    if (picked) closePick({ restoreFocus: false });
     state.home = mode;
     try { localStorage.setItem(HOME_KEY, mode); } catch { /* storage blocked: this visit only */ }
     const list = mode === 'list';
@@ -596,6 +704,149 @@ function wireMap() {
   renderGoals();
   const svg = map.querySelector('svg');
   if (svg && state.home === 'map') introSweep(svg);
+}
+
+/* ------------------------------------------------------ pick, then go */
+
+// Tap 1 on the map selects a group and opens this panel; tap 2 (Start, or the same group again)
+// opens the list. The panel is a non-modal <dialog> docked to the bottom, in thumb reach, so the
+// map stays live behind it: tap another group to switch, empty stage to clear.
+let picked = null; // the selected group, or null
+let pickLevel = 'all'; // the level chosen in the panel; kept while you switch groups
+let pickEntry = false; // a history entry was pushed when the panel opened, so Back closes it
+let skipPops = 0; // pops we caused ourselves with history.back()
+let quietFocus = false; // focus is coming back to a hotspot: don't light it up again
+let goalsStale = false; // goals changed while the panel was open: redraw the strip once it closes
+
+function renderPick(focus = null) {
+  const panel = el('pick');
+  if (!panel || !picked) return;
+  panel.querySelector('.pick-body').innerHTML = pickContent(picked, pickLevel);
+  document.documentElement.style.setProperty('--pick-h', `${panel.offsetHeight}px`);
+  sizeFigureToPanel();
+  if (focus) panel.querySelector(focus)?.focus({ preventScroll: true });
+}
+
+/** The panel owns the bottom of the screen: shrink the figure into the room above it, so every
+ *  group stays tappable instead of sitting behind the sheet. Runs on open, on resize and on rotate. */
+function sizeFigureToPanel() {
+  const figure = document.querySelector('#map .figure');
+  const panel = el('pick');
+  if (!figure) return;
+  if (!panel?.open) { figure.style.removeProperty('height'); return; }
+  // Twice, a beat apart: the panel's own content can settle a frame after it opens (the label
+  // moves, the blurb wraps), and a stale measure leaves a strip of the feet behind the sheet.
+  if (!sizeFigureToPanel.settled) {
+    sizeFigureToPanel.settled = true;
+    window.setTimeout(() => { sizeFigureToPanel.settled = false; sizeFigureToPanel(); }, 120);
+  }
+  // The figure sits in a centred grid, so shrinking it also moves its top down: measure, adjust,
+  // and settle over up to three passes rather than assuming where it will land.
+  let height = Math.min(window.innerHeight * 0.56, figure.getBoundingClientRect().height || window.innerHeight * 0.56);
+  for (let pass = 0; pass < 5; pass += 1) {
+    figure.style.height = `${Math.max(200, height)}px`;
+    const box = figure.getBoundingClientRect();
+    const room = panel.getBoundingClientRect().top - box.bottom - 20;
+    if (room >= -1) break;
+    if (height <= 200) break;
+    // A centred figure moves half of every shrink, so correct by twice the overshoot.
+    height += room * 2;
+    if (height <= 200) break;
+  }
+}
+// Guarded: the tests import this module in Node, where there is no window.
+if (typeof window !== 'undefined') window.addEventListener('resize', () => sizeFigureToPanel());
+
+/** Scroll just enough that the picked group (and its label) sits above the panel, never under it. */
+function revealAbovePanel(map, id) {
+  const panel = el('pick');
+  const rects = [...map.querySelectorAll(`.hotspot[data-muscle="${id}"]`)].map((path) => path.getBoundingClientRect());
+  const label = el('map-label');
+  if (label?.classList.contains('is-on')) rects.push(label.getBoundingClientRect());
+  if (!panel || !rects.length) return;
+  const top = Math.min(...rects.map((r) => r.top));
+  const bottom = Math.max(...rects.map((r) => r.bottom));
+  // From the panel's resting height, not its rect: on its first frame it may still be sliding in.
+  const limit = window.innerHeight - panel.offsetHeight - 12;
+  let dy = 0;
+  if (bottom > limit) dy = bottom - limit;
+  else if (top < 8) dy = top - 8;
+  if (top - dy < 8) dy = top - 8; // a group taller than the room left: keep its top in view
+  if (Math.abs(dy) >= 1) window.scrollBy({ top: Math.round(dy), behavior: reducedMotion() ? 'instant' : 'smooth' });
+}
+
+function selectGroup(id) {
+  const map = el('map');
+  const panel = el('pick');
+  if (!map || !panel || !BY_MUSCLE[id]) return;
+  const opening = !panel.open;
+  picked = id;
+  showGroup(map, id, 'lit');
+  if (opening) {
+    panel.show();
+    document.documentElement.classList.add('pick-open');
+    if (!pickEntry) {
+      history.pushState({ gaPick: true }, '');
+      pickEntry = true;
+    }
+  }
+  renderPick('.level-choice[aria-checked="true"]');
+  revealAbovePanel(map, id);
+}
+
+/** Close the panel with no navigation. `viaHistory` false: Back already popped its entry. */
+function closePick({ restoreFocus = true, viaHistory = true } = {}) {
+  const id = picked;
+  const entry = pickEntry; // dismissPick clears it
+  dismissPick();
+  if (entry && viaHistory) {
+    skipPops += 1;
+    history.back();
+  }
+  const map = el('map');
+  if (map) showGroup(map, null);
+  if (restoreFocus && id && map) {
+    quietFocus = true;
+    map.querySelector(`.hotspot[data-muscle="${id}"]`)?.focus({ preventScroll: true });
+    quietFocus = false;
+  }
+}
+
+/** Drop the selection and hide the panel; history and focus are the caller's business. */
+function dismissPick() {
+  picked = null;
+  pickEntry = false;
+  const panel = el('pick');
+  if (panel?.open) panel.close();
+  document.documentElement.classList.remove('pick-open');
+  if (goalsStale) { goalsStale = false; renderGoals(); }
+}
+
+function startPicked() {
+  const id = picked;
+  if (!id) return;
+  openMuscle(id, { level: usableLevel(id, pickLevel), fresh: true });
+}
+
+function wirePick() {
+  const panel = el('pick');
+  if (!panel) return;
+  const choose = (value) => {
+    pickLevel = choiceFor(value).value;
+    renderPick('.level-choice[aria-checked="true"]');
+  };
+  panel.addEventListener('click', (event) => {
+    const choice = event.target.closest('.level-choice');
+    if (choice) { if (!choice.disabled) choose(choice.dataset.level); return; }
+    const action = event.target.closest('[data-pick]')?.dataset.pick;
+    if (action === 'start') startPicked();
+    else if (action === 'close') closePick();
+    else if (action === 'save') {
+      setGoal(picked, !isGoal(picked));
+      renderPick('[data-pick="save"]');
+    }
+  });
+  wireLevelKeys(panel, choose);
 }
 
 /* -------------------------------------------------------------- the peek */
@@ -665,10 +916,7 @@ function peekSheet() {
     if (action === 'see') {
       const id = peekFor;
       sheet.close();
-      state.place = 'all';
-      state.level = 'all';
-      state.equipment = 'all';
-      openMuscle(id);
+      openMuscle(id, { level: peekLevel(id), fresh: true });
     }
   });
   sheet.addEventListener('close', () => {
@@ -686,18 +934,22 @@ function openPeek(id, onClose = null) {
   if (sheet.open) sheet.close();
   peekFor = id;
   peekClosed = onClose;
-  const n = MOVES[id];
+  const level = peekLevel(id);
+  const n = movesFor(id, { level }).length;
   el('peek-title').textContent = muscle.name;
-  el('peek-n').textContent = plural(n, 'movement');
+  el('peek-n').textContent = level === 'all' ? plural(n, 'movement') : `${n} of ${MOVES[id]} movements · ${choiceFor(level).label}`;
   el('peek-status').textContent = '';
-  sheet.querySelector('[data-peek="see"]').textContent = `See the ${n} movements`;
+  sheet.querySelector('[data-peek="see"]').textContent = `See the ${plural(n, 'movement')}`;
   sheet.dispatchEvent(new Event('ga:label'));
   sheet.showModal();
-  // The one vibration in the app: the nudge that says the sheet is up.
 }
+
+/** With a group selected on the map, the peek honours the level chosen in its panel. */
+const peekLevel = (id) => (picked ? usableLevel(id, pickLevel) : 'all');
 
 function route() {
   app().classList.remove('no-stagger');
+  dismissPick();
   const hash = location.hash.replace(/^#/, '').replace(/^\//, '');
   if (hash && BY_MUSCLE[hash]) {
     const muscle = BY_MUSCLE[hash];
@@ -726,8 +978,20 @@ function boot() {
       el('goals-all')?.focus();
     }
   });
+  // Back closes the panel; Esc does too (a non-modal dialog has no Esc of its own).
+  window.addEventListener('popstate', () => {
+    if (skipPops) { skipPops -= 1; return; }
+    if (el('pick')?.open) closePick({ viaHistory: false });
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || !el('pick')?.open || el('peek')?.open || el('welcome')?.open) return;
+    event.preventDefault();
+    closePick();
+  });
   onGoalsChange(() => {
-    renderGoals();
+    // The goals strip sits above the map: drawing it now would push the figure under the panel.
+    if (picked) goalsStale = true;
+    else renderGoals();
     const pill = el('goal-pill');
     if (pill && state.muscle) pill.hidden = !isGoal(state.muscle);
   });
@@ -740,4 +1004,4 @@ function boot() {
 
 if (typeof document !== 'undefined' && typeof window !== 'undefined') boot();
 
-export { exercisesFor, MUSCLES, EXERCISES };
+export { exercisesFor, MUSCLES, EXERCISES, pickContent, viewMuscleFor };

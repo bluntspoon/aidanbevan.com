@@ -1,6 +1,6 @@
 // Gains Atlas offline: keep the app's own files, serve them from the cache, refresh them from the network.
 // Bump CACHE whenever any file in FILES changes, so installed copies pick up the new version.
-const CACHE = 'gains-atlas-v3';
+const CACHE = 'gains-atlas-v5';
 const FILES = [
   'index.html',
   'app.css',
@@ -11,6 +11,7 @@ const FILES = [
   'diagram.js',
   'body-map.js',
   'goals.js',
+  'pick.js',
   'icon.svg',
   'icon-192.png',
   'icon-512.png',
