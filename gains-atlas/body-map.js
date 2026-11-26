@@ -1,176 +1,216 @@
-// The body map: two hand-drawn SVG figures whose muscle groups are buttons.
+// The body map: two drawn SVG figures whose body parts are buttons.
 //
-// Proportioned like an athlete: shoulders about two head-widths, a ribcage that tapers to the
-// waist, a real pelvis, deltoid caps, a bicep peak, a calf belly. Deliberately not a medical
-// plate — every hotspot has to stay a finger-sized target at 360 px — but it should read as a
-// person, not a toy. Every group carries data-muscle, role="button" and a <title>.
+// Art direction (see the design review): one material, one gradient for the whole figure, shading
+// from a dozen soft form shadows and a single rim light down the left edge. The anatomy is carried
+// by grooves that sit exactly where one tappable group meets the next. Each group carries a
+// faint ember edge at rest, so the map reads as tappable; the selected group is the only solid
+// warm thing on screen.
+//
+// Geometry is drawn for the left half of the picture (x < 100) and mirrored, so both sides of the
+// body always match. Every path uses absolute M/L/C/Z commands only, which keeps mirroring a
+// simple "x -> 200 - x" on each coordinate pair.
+
+const mirror = (d) => d.replace(/(-?\d+(?:\.\d+)?)[ ,]+(-?\d+(?:\.\d+)?)/g,
+  (_, x, y) => `${+(200 - Number(x)).toFixed(2)} ${y}`);
+
+const both = (d) => `${d} ${mirror(d)}`; // one path, two sides (fine for shapes that do not overlap)
 
 const H = (id, label, d) =>
   `<path class="hotspot" data-muscle="${id}" role="button" tabindex="0" aria-label="${label}" d="${d}"><title>${label}</title></path>`;
 
-/* ------------------------------------------------------------------ front */
+/** A pair of hotspots, one per side of the body. */
+const pair = (id, label, d) => H(id, label, d) + H(id, label, mirror(d));
 
-const FRONT_BASE = `
-  <!-- head, neck, and the trapezius slope that joins them to the shoulders -->
-  <ellipse cx="100" cy="30" rx="15" ry="18.5" fill="#312a2a"/>
-  <path d="M93 44 C 96 49, 104 49, 107 44 L 108 58 C 104 62, 96 62, 92 58 Z" fill="#2a2424"/>
-  <path d="M100 50 C 92 52, 84 56, 76 62 L60 70 L74 70 C 84 66, 92 64, 100 63
-           C 108 64, 116 66, 126 70 L140 70 L124 62 C 116 56, 108 52, 100 50 Z" fill="#241f1f"/>
-  <!-- ribcage: clavicles, then the lat taper into the waist -->
-  <path d="M100 62
-           C 88 62, 75 66, 68 72
-           C 62 78, 59 90, 59 102
-           C 55 114, 58 128, 61 138
-           C 62 150, 65 160, 68 168
-           C 70 174, 74 179, 80 182
-           C 87 185, 93 186, 100 186
-           C 107 186, 113 185, 120 182
-           C 126 179, 130 174, 132 168
-           C 135 160, 138 150, 140 140
-           C 143 128, 145 114, 145 102
-           C 145 90, 142 78, 136 72
-           C 128 66, 114 62, 100 62 Z"
-        fill="#241f1f" stroke="#3b3232" stroke-width="1.1"/>
-  <!-- clavicle line, so the chest sits under something -->
-  <path d="M84 72 C 90 70, 96 69, 100 70 C 104 69, 110 70, 116 72" fill="none" stroke="#3b3232" stroke-width="1"/>
-  <!-- arms: deltoid to elbow to wrist, hanging with a small gap at the ribcage -->
-  <path d="M64 72
-           C 55 75, 49 83, 47 94
-           C 45 104, 44 114, 45 122
-           C 45 128, 47 132, 51 132
-           C 55 132, 57 128, 58 122
-           L 62 100 L 64 84 Z" fill="#241f1f" stroke="#3b3232" stroke-width="1.1"/>
-  <path d="M136 72
-           C 145 75, 151 83, 153 94
-           C 155 104, 156 114, 155 122
-           C 155 128, 153 132, 149 132
-           C 145 132, 143 128, 142 122
-           L 138 100 L 136 84 Z" fill="#241f1f" stroke="#3b3232" stroke-width="1.1"/>
-  <path d="M45 133 C 42 152, 42 178, 45 202 L 53 202 C 55 178, 54 152, 52 133 Z" fill="#241f1f" stroke="#3b3232" stroke-width="1.1"/>
-  <path d="M155 133 C 158 152, 158 178, 155 202 L 147 202 C 145 178, 146 152, 148 133 Z" fill="#241f1f" stroke="#3b3232" stroke-width="1.1"/>
-  <path d="M45 203 C 42 213, 44 224, 50 227 C 55 229, 58 224, 56 216 L 53 203 Z" fill="#2e2828"/>
-  <path d="M155 203 C 158 213, 156 224, 150 227 C 145 229, 142 224, 144 216 L 147 203 Z" fill="#2e2828"/>
-  <!-- pelvis, then thighs that taper to the knee, calves, ankles -->
-  <path d="M80 183 C 74 188, 71 196, 72 206 C 73 213, 78 217, 86 217 C 94 217, 99 213, 100 206
-           C 101 213, 106 217, 114 217 C 122 217, 127 213, 128 206 C 129 196, 126 188, 120 183 Z"
-        fill="#241f1f" stroke="#3b3232" stroke-width="1.1"/>
-  <path d="M73 216 C 70 230, 70 248, 72 262 C 73 270, 76 276, 79 280 L 84 296 C 87 304, 87 310, 85 316
-           L 78 356 C 77 364, 80 369, 84 369 C 88 369, 91 365, 91 358 L 92 322 L 93 296 L 93 262
-           C 96 246, 94 227, 92 216 Z" fill="#241f1f" stroke="#3b3232" stroke-width="1.1"/>
-  <path d="M77 356 C 73 360, 71 366, 72 370 L 92 370 C 93 364, 89 358, 84 356 Z" fill="#2e2828"/>
-  <path d="M127 216 C 130 230, 130 248, 128 262 C 127 270, 124 276, 121 280 L 116 296 C 113 304, 113 310, 115 316
-           L 122 356 C 123 364, 120 369, 116 369 C 112 369, 109 365, 109 358 L 108 322 L 107 296 L 107 262
-           C 104 246, 106 227, 108 216 Z" fill="#241f1f" stroke="#3b3232" stroke-width="1.1"/>
-  <path d="M123 356 C 127 360, 129 366, 128 370 L 108 370 C 107 364, 111 358, 116 356 Z" fill="#2e2828"/>
-`;
+/* -------------------------------------------------------------- silhouette */
+
+// The left contour, piece by piece, so the rim light can reuse the lit pieces.
+const SIL_HEAD = 'M100.5 12 L100 12 C 93 12, 87.6 16.6, 87 24.6 C 86.6 30.6, 87.4 36.2, 89.6 40.6';
+const SIL_SHOULDER = 'C 89.7 44, 89.2 48, 88.2 51 C 85 56, 77 60, 68 63 C 60 65.2, 55 69.4, 53 76 C 51.2 82, 50.6 90, 50 98';
+const SIL_ARM_OUT = 'C 49.2 108, 49 120, 50 128 C 50.6 133, 50 138, 48.8 143 C 47 152, 46.4 165, 46.2 178 C 46 186, 46 191, 46.3 195';
+// Relaxed hand, tilted a few degrees in: one tapered finger mass, and on the side toward the body
+// a thumb that is its own lobe, split from the fingers by a clear notch at the web.
+const SIL_HAND = 'C 45 200, 44.2 206, 44.6 212 C 45 217.6, 47 221.4, 50 221.4 C 52.6 221.4, 54.2 218.6, 54.4 214.6 '
+  + 'C 54.5 212.8, 54.5 211.2, 54.7 209.8 C 55.8 211.6, 57.4 213.6, 58.5 213.2 C 59.5 212.6, 59.2 209.6, 58.3 206.8 '
+  + 'C 57.4 203.6, 55.8 199.6, 53.6 196.4';
+const SIL_ARM_IN = 'C 55 188, 57.5 176, 59.6 160 C 60.6 152, 61 146, 60.4 140 C 60 136, 62.5 128, 64 118 C 65 110, 66 100, 67.5 91.5';
+const SIL_TORSO = 'C 66.6 97, 66.2 104, 67 112 C 68.5 124, 72 134, 72.8 142 C 73 150, 71.5 156, 70.5 162 C 69 172, 66.5 182, 66 192';
+const SIL_LEG_OUT = 'C 65.8 210, 67 238, 71.5 262 C 73 270, 74 276, 73.4 282 C 72.5 290, 70.6 300, 71.2 312 C 72 326, 77 340, 79.6 350';
+// Front: an ankle bone on each side, the top of the foot, toes as one rounded edge, and the heel
+// showing behind the inner side of the foot.
+const SIL_FOOT_FRONT = 'C 78.4 351.4, 77.6 354, 78.4 356 C 79 357.4, 79.8 357.8, 79.4 359.4 '
+  + 'C 77.8 363, 77.4 368.4, 80.2 370.2 C 83 371.8, 89 371.8, 92.4 370.4 C 95 370, 96 367.4, 95 365 '
+  + 'C 94.2 363.2, 92.4 362.4, 92 360.6 C 93.6 358.8, 94 354.6, 92.4 351.8 C 91.4 350.2, 90.6 348.6, 90.4 347';
+// Back: the Achilles narrows, both ankle bones bump out, and the heel is a round bulb below.
+const SIL_FOOT_BACK = 'C 80.6 352.4, 81.2 354, 80.2 356.4 C 79.4 358, 79.4 359.6, 80.6 361 '
+  + 'C 79.8 364, 80.2 368.6, 83 370.6 C 85.4 372.2, 89.4 372, 91.2 369.6 C 92.6 367.6, 92.4 363.6, 91.4 361 '
+  + 'C 92.4 359.4, 92.4 357.4, 91.4 355.6 C 90.8 353.4, 90.6 350, 90.4 347';
+const SIL_LEG_IN = 'C 92 335, 93.5 315, 93 300 C 92.6 290, 91 284, 91.2 278 C 91.5 270, 94 255, 95 240';
+const SIL_CROTCH_FRONT = 'C 96 225, 97.5 208, 98.8 199 C 99.3 197, 99.8 196.5, 100.5 196.5 Z';
+// Seen from behind the glutes hang over the top of the thighs, so the legs part lower down.
+const SIL_CROTCH_BACK = 'C 96.2 232, 97.6 225, 99.2 222.6 C 99.6 222.2, 100 222, 100.5 222 Z';
+
+const half = (foot, crotch) =>
+  [SIL_HEAD, SIL_SHOULDER, SIL_ARM_OUT, SIL_HAND, SIL_ARM_IN, SIL_TORSO, SIL_LEG_OUT, foot, SIL_LEG_IN, crotch].join(' ');
+
+// Two overlapping halves, each its own path: mirroring flips the winding, so one path holding both
+// would cancel out along the centre line. The shared userSpace gradient hides the overlap.
+const halves = (d) => [d, mirror(d)];
+const SIL_FRONT = halves(half(SIL_FOOT_FRONT, SIL_CROTCH_FRONT));
+const SIL_BACK = halves(half(SIL_FOOT_BACK, SIL_CROTCH_BACK));
+
+// The rim light only touches surfaces that face the light: head, shoulder, outer arm, hand, and the
+// outer hip and leg. Never mirrored.
+const RIM = [
+  `${SIL_HEAD} ${SIL_SHOULDER} ${SIL_ARM_OUT} C 44.8 200, 44 207, 44.7 213`,
+  `M70.5 162 C 69 172, 66.5 182, 66 192 ${SIL_LEG_OUT}`,
+].join(' ');
+
+// Small carved lines that are not group edges: the knuckles across the back of the fingers, and
+// the crease where the foot meets the ankle (front) or the heel meets the Achilles (back).
+const KNUCKLES = both('M45.2 211.4 C 47.8 212.8, 51.6 212.8, 54.4 211.6');
+const DETAILS_FRONT = `${KNUCKLES} ${both('M79.8 359.4 C 83.4 360.8, 88 360.8, 91.6 359.6')}`;
+const DETAILS_BACK = `${KNUCKLES} ${both('M80.8 361.4 C 83.8 360.2, 88 360.2, 91.2 361.2')}`;
+
+/* ------------------------------------------------------------------ shared */
+
+// The ids are fixed (ga-*) because only one figure is ever in the document: the map on home, or
+// the miniature on a body-part page.
+const defs = (silhouette) => `
+  <defs>
+    <linearGradient id="ga-skin" gradientUnits="userSpaceOnUse" x1="40" y1="0" x2="170" y2="380">
+      <stop offset="0" stop-color="#5c4b42"/>
+      <stop offset="0.5" stop-color="#463931"/>
+      <stop offset="1" stop-color="#342a24"/>
+    </linearGradient>
+    <!-- solid ember with a white highlight (0.35 -> 0) baked in, top-left of each shape -->
+    <radialGradient id="ga-lit" cx="0.35" cy="0.25" r="0.75">
+      <stop offset="0" stop-color="#ff946d"/>
+      <stop offset="1" stop-color="#ff5a1f"/>
+    </radialGradient>
+    <radialGradient id="ga-floor" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#000" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <!-- the neutral pool of light the figure stands in, so the floor shadow has something to fall on -->
+    <radialGradient id="ga-pool" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.07"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="ga-clip">${silhouette.map((d) => `<path d="${d}"/>`).join('')}</clipPath>
+    <!-- grooves fade out near the silhouette, so the edge never reads as an outline -->
+    <filter id="ga-erode" x="0" y="0" width="1" height="1"><feMorphology operator="erode" radius="2.4"/></filter>
+    <mask id="ga-inner" maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="380">
+      <g filter="url(#ga-erode)">${silhouette.map((d) => `<path d="${d}" fill="#fff"/>`).join('')}</g>
+    </mask>
+    <filter id="ga-form" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2.5"/>
+    </filter>
+    <!-- one tight ember bloom, under the selected shape -->
+    <filter id="ga-bloom" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="b"/>
+      <feFlood flood-color="#ff5a1f" flood-opacity="0.5"/>
+      <feComposite in2="b" operator="in" result="bloom"/>
+      <feMerge><feMergeNode in="bloom"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>`;
+
+const shade = (opacity, d) => `<path d="${d}" fill="#000" fill-opacity="${opacity}"/>`;
+
+// The box hugs the body (hands at x 44/156, head at 12, heels at 372) so the figure fills its
+// space; both views share it, so switching never changes the scale.
+export const VIEWBOX = { x: 38, y: 8, width: 124, height: 370 };
+
+const figure = ({ label, silhouette, forms, details, hotspots }) => {
+  // The grooves are the edges of the tappable groups, so the carving and the targets always agree.
+  const grooves = [...hotspots.matchAll(/ d="([^"]+)"/g)].map((m) => m[1]).join(' ');
+  return `
+<svg viewBox="${VIEWBOX.x} ${VIEWBOX.y} ${VIEWBOX.width} ${VIEWBOX.height}" class="figure" aria-label="${label}">${defs(silhouette)}
+  <ellipse class="floor" cx="100" cy="371" rx="60" ry="7" fill="url(#ga-pool)"/>
+  <ellipse class="floor" cx="100" cy="371.5" rx="30" ry="3.6" fill="url(#ga-floor)"/>
+  <g class="anatomy">
+    ${silhouette.map((d) => `<path class="skin" d="${d}" fill="url(#ga-skin)"/>`).join('')}
+    <g class="forms" clip-path="url(#ga-clip)" filter="url(#ga-form)">${forms}</g>
+    <path class="grooves" d="${grooves}" mask="url(#ga-inner)"/>
+    <path class="grooves details" d="${details}"/>
+    <path class="rim" d="${RIM}" clip-path="url(#ga-clip)"/>
+  </g>
+  <g class="hotspots">${hotspots}</g>
+</svg>`;
+};
+
+/* ------------------------------------------------------------------- front */
+
+const FRONT_FORMS = [
+  shade(0.35, 'M89.6 41 C 94 47.6, 106 47.6, 110.4 41 L 110 49 C 105 53.4, 95 53.4, 90 49 Z'), // under the chin
+  shade(0.35, both('M69.5 97.5 C 78 103.5, 90 105.6, 99 102 L 99 106.5 C 90 108.6, 77 107.4, 69 101.5 Z')), // under the pecs
+  shade(0.3, both('M66.8 93 C 67.6 110, 71.6 128, 73.6 143 L 79 143 C 76 126, 72 108, 70.4 93 Z')), // under the lats
+  shade(0.22, both('M52 95 C 55 99.5, 60 102, 65.6 100 L 65 104 C 59 105.6, 54 103.4, 51.4 99.6 Z')), // under the deltoid
+  shade(0.25, both('M85.6 186 C 85.8 210, 86.4 236, 86 262 L 89.4 262 C 89.6 236, 89.2 210, 89 188 Z')), // between the quads
+  shade(0.25, both('M75 287 C 80 291.5, 86 291.5, 91 287 L 91 292 C 86 295.6, 80 295.6, 75 292 Z')), // under the kneecap
+  shade(0.25, both('M91.6 292 C 92.6 306, 92.2 326, 89.6 346 L 86.4 346 C 89 326, 89.6 306, 88.6 292 Z')), // inner calf
+].join('');
 
 const FRONT_HOTSPOTS = [
-  // pectorals: two fans from the sternum out to the armpit
-  H('chest', 'Chest', 'M98 75 C 90 73, 81 75, 76 80 C 72 85, 71 93, 74 99 C 79 105, 88 105, 95 101 C 97 96, 97 86, 98 78 Z'),
-  H('chest', 'Chest', 'M102 75 C 110 73, 119 75, 124 80 C 128 85, 129 93, 126 99 C 121 105, 112 105, 105 101 C 103 96, 103 86, 102 78 Z'),
-  // deltoids: caps over the shoulder joint
-  H('shoulders', 'Shoulders', 'M72 68 C 64 71, 59 78, 58 88 C 57 94, 62 97, 67 95 C 72 92, 75 85, 75 76 Z'),
-  H('shoulders', 'Shoulders', 'M128 68 C 136 71, 141 78, 142 88 C 143 94, 138 97, 133 95 C 128 92, 125 85, 125 76 Z'),
-  // biceps: the peak on the front of the upper arm
-  H('biceps', 'Biceps', 'M56 98 C 52 108, 51 120, 53 130 C 55 137, 62 137, 64 130 C 66 120, 64 108, 62 98 Z'),
-  H('biceps', 'Biceps', 'M144 98 C 148 108, 149 120, 147 130 C 145 137, 138 137, 136 130 C 134 120, 136 108, 138 98 Z'),
-  // forearms
-  H('forearms', 'Forearms', 'M50 137 C 48 158, 48 186, 50 198 C 54 203, 60 202, 61 194 C 62 176, 61 152, 60 137 Z'),
-  H('forearms', 'Forearms', 'M150 137 C 152 158, 152 186, 150 198 C 146 203, 140 202, 139 194 C 138 176, 139 152, 140 137 Z'),
-  // abs: upper block and lower block, split at the navel
-  H('abs', 'Abs', 'M88 92 C 94 89, 106 89, 112 92 L 111 134 C 106 137, 94 137, 89 134 Z'),
-  H('lower-abs', 'Lower abs', 'M89 141 C 94 143, 106 143, 111 141 L 110 172 C 105 176, 95 176, 90 172 Z'),
-  // obliques: the waist sides, narrow and angled
-  H('obliques', 'Obliques', 'M78 104 C 74 118, 74 136, 78 152 C 82 158, 87 152, 87 140 L 87 108 C 84 104, 81 103, 78 104 Z'),
-  H('obliques', 'Obliques', 'M122 104 C 126 118, 126 136, 122 152 C 118 158, 113 152, 113 140 L 113 108 C 116 104, 119 103, 122 104 Z'),
-  // quads: the rectus femoris down the front of the thigh
-  H('quads', 'Quads', 'M75 224 C 72 240, 72 258, 75 272 C 78 280, 85 280, 87 271 C 89 256, 88 238, 85 222 Z'),
-  H('quads', 'Quads', 'M125 224 C 128 240, 128 258, 125 272 C 122 280, 115 280, 113 271 C 111 256, 112 238, 115 222 Z'),
+  H('neck', 'Neck', 'M91 46.4 C 94 48.8, 106 48.8, 109 46.4 L 110.6 53.4 C 106 58.4, 94 58.4, 89.4 53.4 Z'),
+  pair('shoulders', 'Shoulders', 'M71 64.6 C 63 64.8, 56.6 68.6, 53.8 75 C 51.8 80, 51.4 87, 52 93 C 53.6 98, 56 100.6, 58.6 101.2 C 61.6 96, 64 88, 66.4 80 C 68 74, 70 69, 71 64.6 Z'),
+  pair('chest', 'Chest', 'M99 68.2 C 92 66.6, 80 66.6, 73 68.2 C 70 74.4, 68 81, 66.8 89 C 67.2 93, 68 95.4, 69.4 97 C 75 101.4, 84 103.4, 92 102.6 C 95.4 102.2, 98 101.2, 99 100 Z'),
+  pair('biceps', 'Biceps', 'M51.4 98.6 C 54 102, 57.4 103.6, 60 103.8 C 62.4 103.2, 64.2 100.8, 65.4 97.8 C 65 108, 63.6 120, 61.6 130.6 C 59 134.4, 54.6 134.4, 52 131.4 C 50.2 124, 49.8 112, 50.6 104 Z'),
+  pair('forearms', 'Forearms', 'M50.6 137.2 C 54 136, 58 136.4, 60 139 C 59.8 150, 58.6 165, 56 178 C 54.8 184, 53.8 188, 52.8 191.4 L 47.4 191.4 C 47 180, 47.4 160, 49 146 Z'),
+  pair('hand-grip', 'Hands & grip', 'M46.6 197.4 L 53.2 197.4 C 55.6 200.6, 57.4 204.6, 58 208 C 58.4 210.6, 58.1 212.2, 57.5 212.3 C 56.7 212.4, 55.6 211.2, 54.9 210.4 C 54.7 214, 54 218.4, 50.8 220.4 C 48 220.8, 46.2 218.6, 45.6 214.8 C 45 209, 45.6 202, 46.6 197.4 Z'),
+  pair('obliques', 'Obliques', 'M70 100.8 C 75 103.6, 80 104.8, 84.4 104.8 L 85 150 C 82 156.6, 78 161.6, 73 164.4 C 72.2 158, 73.6 150, 73.6 142 C 72.8 132, 69.4 122, 68.2 112 C 68 107, 68.6 103, 70 100.8 Z'),
+  H('abs', 'Abs', 'M86 104.4 C 92 104.6, 97 103.6, 100 101.6 C 103 103.6, 108 104.6, 114 104.4 L 114.4 139.2 C 110 141, 104 141.6, 100 141.6 C 96 141.6, 90 141, 85.6 139.2 Z'),
+  H('lower-abs', 'Lower abs', 'M85.6 143.6 C 90 145.4, 96 146, 100 146 C 104 146, 110 145.4, 114.4 143.6 L 114 166 C 110 176, 105 182.6, 100 186 C 95 182.6, 90 176, 86 166 Z'),
+  pair('quads', 'Quads', 'M71.6 168 C 77 173, 82 178, 86 183.6 C 85.6 200, 85.4 220, 85.8 240 C 86 250, 85.6 259, 84.4 266.4 C 80 268, 75.6 267.4, 72.6 265 C 70 252, 67.8 232, 67.6 210 C 67.6 192, 69 178, 71.6 168 Z'),
+  pair('adductors', 'Inner thighs', 'M88 186.6 C 92.4 191, 96.4 195.4, 97.6 200 C 96.6 214, 95 232, 93.4 248 C 92.4 254, 90.6 258, 88.6 259.4 C 87.8 250, 87.4 238, 87.4 222 C 87.4 208, 87.6 196, 88 186.6 Z'),
+  pair('knees', 'Knees', 'M74.4 270.4 C 79 271.8, 85 270.8, 90.4 265.4 C 91 271, 90.8 276, 90.4 281 C 89.8 287, 87 291.4, 82.2 291.8 C 77.8 291.8, 75 289, 74.2 284 C 74 279, 74.2 274, 74.4 270.4 Z'),
+  pair('tibialis', 'Shins', 'M75.2 295.4 C 79 297.4, 86 297.4, 90.8 294.4 C 91.8 305, 92 318, 91 332 C 90.4 338, 89.6 342, 88.6 344 L 80.2 344 C 76.8 336, 73.4 324, 73 312 C 72.8 304, 73.6 298.4, 75.2 295.4 Z'),
+  pair('ankles', 'Ankles', 'M80.6 347 L 89.6 347 C 90.6 349, 92.6 351.6, 93 354.6 C 93.2 357.6, 92.2 359.6, 91.2 360.8 C 92 362.8, 94 363.6, 94.4 365.6 '
+    + 'C 95 368, 93.6 369.6, 91.8 369.8 C 88.6 371, 83 371, 80.6 369.6 C 78.4 368.2, 78.4 363.4, 79.8 359.6 C 80.4 357.8, 79.2 357, 78.8 355.4 C 78.6 352.6, 79.6 349.4, 80.6 347 Z'),
 ].join('');
 
-export const FRONT_FIGURE = `
-<svg viewBox="0 0 200 380" class="figure" aria-label="Front of the body: tap a muscle">
-  <g class="anatomy">${FRONT_BASE}</g>
-  <g class="hotspots">${FRONT_HOTSPOTS}</g>
-</svg>`;
+export const FRONT_FIGURE = figure({
+  label: 'Front of the body: tap a body part',
+  silhouette: SIL_FRONT,
+  forms: FRONT_FORMS,
+  details: DETAILS_FRONT,
+  hotspots: FRONT_HOTSPOTS,
+});
 
-/* ------------------------------------------------------------------- back */
+/* -------------------------------------------------------------------- back */
 
-const BACK_BASE = `
-  <ellipse cx="100" cy="30" rx="15" ry="18.5" fill="#312a2a"/>
-  <path d="M94 46h12v8h-12z" fill="#2a2424"/>
-  <path d="M100 50 C 92 52, 84 56, 76 62 L60 70 L74 70 C 84 66, 92 64, 100 63
-           C 108 64, 116 66, 126 70 L140 70 L124 62 C 116 56, 108 52, 100 50 Z" fill="#241f1f"/>
-  <path d="M100 62
-           C 88 62, 75 66, 68 72
-           C 62 78, 59 90, 59 102
-           C 55 114, 58 128, 61 138
-           C 62 150, 65 160, 68 168
-           C 70 174, 74 179, 80 182
-           C 87 185, 93 186, 100 186
-           C 107 186, 113 185, 120 182
-           C 126 179, 130 174, 132 168
-           C 135 160, 138 150, 140 140
-           C 143 128, 145 114, 145 102
-           C 145 90, 142 78, 136 72
-           C 128 66, 114 62, 100 62 Z"
-        fill="#241f1f" stroke="#3b3232" stroke-width="1.1"/>
-  <path d="M64 72
-           C 55 75, 49 83, 47 94
-           C 45 104, 44 114, 45 122
-           C 45 128, 47 132, 51 132
-           C 55 132, 57 128, 58 122
-           L 62 100 L 64 84 Z" fill="#241f1f" stroke="#3b3232" stroke-width="1.1"/>
-  <path d="M136 72
-           C 145 75, 151 83, 153 94
-           C 155 104, 156 114, 155 122
-           C 155 128, 153 132, 149 132
-           C 145 132, 143 128, 142 122
-           L 138 100 L 136 84 Z" fill="#241f1f" stroke="#3b3232" stroke-width="1.1"/>
-  <path d="M45 133 C 42 152, 42 178, 45 202 L 53 202 C 55 178, 54 152, 52 133 Z" fill="#241f1f" stroke="#3b3232" stroke-width="1.1"/>
-  <path d="M155 133 C 158 152, 158 178, 155 202 L 147 202 C 145 178, 146 152, 148 133 Z" fill="#241f1f" stroke="#3b3232" stroke-width="1.1"/>
-  <path d="M45 203 C 42 213, 44 224, 50 227 C 55 229, 58 224, 56 216 L 53 203 Z" fill="#2e2828"/>
-  <path d="M155 203 C 158 213, 156 224, 150 227 C 145 229, 142 224, 144 216 L 147 203 Z" fill="#2e2828"/>
-  <!-- glutes: heart-shaped pair sitting on the hips -->
-  <path d="M100 184 C 88 184, 76 188, 72 196 C 68 205, 72 216, 82 220 C 90 223, 97 220, 100 214
-           C 103 220, 110 223, 118 220 C 128 216, 132 205, 128 196 C 124 188, 112 184, 100 184 Z"
-        fill="#241f1f" stroke="#3b3232" stroke-width="1.1"/>
-  <path d="M74 219 C 71 232, 72 248, 76 262 C 79 270, 82 276, 84 282 L 88 298 C 90 306, 88 312, 85 318
-           L 78 360 C 77 367, 80 371, 84 371 C 88 371, 91 367, 91 360 L 93 324 L 96 292 L 96 258
-           C 96 244, 94 228, 92 219 Z" fill="#241f1f" stroke="#3b3232" stroke-width="1.1"/>
-  <path d="M126 219 C 129 232, 128 248, 124 262 C 121 270, 118 276, 116 282 L 112 298 C 110 306, 112 312, 115 318
-           L 122 360 C 123 367, 120 371, 116 371 C 112 371, 109 367, 109 360 L 107 324 L 104 292 L 104 258
-           C 104 244, 106 228, 108 219 Z" fill="#241f1f" stroke="#3b3232" stroke-width="1.1"/>
-`;
+const BACK_FORMS = [
+  shade(0.3, 'M89.6 42 C 94 47, 106 47, 110.4 42 L 110 50 C 105 53.6, 95 53.6, 90 50 Z'), // under the skull
+  shade(0.25, 'M98.6 62 L 101.4 62 L 101.6 184 L 98.4 184 Z'), // the spine channel
+  shade(0.2, both('M72.4 92.4 C 78 98, 83 101, 88 102 L 87.6 106 C 81 105, 75 101.4, 70.6 95.6 Z')), // under the shoulder blades
+  shade(0.3, both('M68 102 C 70 122, 72 140, 75 160 L 80 158 C 77 138, 73.6 120, 71.6 102 Z')), // under the lats
+  shade(0.35, both('M72 217.6 C 80 224, 91 224.6, 99 220 L 99 225.4 C 91 229, 79 228.6, 71 222 Z')), // under the glutes
+  shade(0.25, both('M75.4 268 C 80 272.6, 86 272.6, 91 268.6 L 91 274 C 86 277, 80 277, 75 273.6 Z')), // behind the knee
+  shade(0.25, both('M91.6 290 C 92.6 305, 92.2 325, 89.6 345 L 86.4 345 C 89 325, 89.6 305, 88.6 290 Z')), // inner calf
+].join('');
 
 const BACK_HOTSPOTS = [
-  // neck: the trapezius rising to the skull
-  H('neck', 'Neck', 'M92 46 C 96 53, 104 53, 108 46 L 110 64 C 105 71, 95 71, 90 64 Z'),
-  // upper back: traps fanning from the neck to each shoulder
-  H('upper-back', 'Upper back', 'M90 64 C 78 66, 68 73, 64 83 C 71 95, 83 102, 99 103 L 99 74 Z'),
-  H('upper-back', 'Upper back', 'M110 64 C 122 66, 132 73, 136 83 C 129 95, 117 102, 101 103 L 101 74 Z'),
-  // lats: from the armpit, wrapping down and in toward the spine
-  H('lats', 'Lats', 'M64 96 C 60 112, 62 134, 69 150 C 77 157, 84 149, 84 134 L 84 104 C 77 99, 70 96, 64 96 Z'),
-  H('lats', 'Lats', 'M136 96 C 140 112, 138 134, 131 150 C 123 157, 116 149, 116 134 L 116 104 C 123 99, 130 96, 136 96 Z'),
-  // lower back: the erectors either side of the spine
-  H('lower-back', 'Lower back', 'M88 136 C 86 152, 87 168, 91 180 L 98 180 L 98 136 Z'),
-  H('lower-back', 'Lower back', 'M112 136 C 114 152, 113 168, 109 180 L 102 180 L 102 136 Z'),
-  // triceps on the back of the upper arm
-  H('triceps', 'Triceps', 'M57 98 C 52 108, 51 120, 53 130 C 55 137, 62 136, 64 129 C 66 119, 64 107, 62 98 Z'),
-  H('triceps', 'Triceps', 'M143 98 C 148 108, 149 120, 147 130 C 145 137, 138 136, 136 129 C 134 119, 136 107, 138 98 Z'),
-  // glutes
-  H('glutes', 'Glutes', 'M86 186 C 76 188, 72 198, 75 209 C 79 217, 90 218, 96 212 C 98 201, 95 189, 86 186 Z'),
-  H('glutes', 'Glutes', 'M114 186 C 124 188, 128 198, 125 209 C 121 217, 110 218, 104 212 C 102 201, 105 189, 114 186 Z'),
-  // hamstrings down the back of the thigh
-  H('hamstrings', 'Hamstrings', 'M77 228 C 74 246, 76 264, 81 278 C 86 284, 92 278, 93 266 C 94 250, 92 236, 88 226 Z'),
-  H('hamstrings', 'Hamstrings', 'M123 228 C 126 246, 124 264, 119 278 C 114 284, 108 278, 107 266 C 106 250, 108 236, 112 226 Z'),
-  // calves: the belly high on the back of the shin
-  H('calves', 'Calves', 'M76 288 C 72 302, 74 322, 80 336 C 86 342, 90 335, 89 322 C 88 306, 86 294, 84 286 Z'),
-  H('calves', 'Calves', 'M124 288 C 128 302, 126 322, 120 336 C 114 342, 110 335, 111 322 C 112 306, 114 294, 116 286 Z'),
+  H('neck', 'Neck', 'M90.6 45 C 94 47, 106 47, 109.4 45 L 111 55 C 106 58.6, 94 58.6, 89 55 Z'),
+  H('upper-back', 'Upper back', 'M88.6 56.6 C 84 60, 77 62.6, 71 64.6 C 75.2 70.6, 81 75.6, 86.4 78.6 C 88 87, 88.6 96, 89.4 104 C 92.4 108.4, 96.4 112.8, 100 115.8 '
+    + 'C 103.6 112.8, 107.6 108.4, 110.6 104 C 111.4 96, 112 87, 113.6 78.6 C 119 75.6, 124.8 70.6, 129 64.6 C 123 62.6, 116 60, 111.4 56.6 C 106.6 60.4, 93.4 60.4, 88.6 56.6 Z'),
+  pair('shoulders', 'Shoulders', 'M69.4 65.8 C 62 66, 56.6 69.2, 53.8 75 C 51.8 80, 51.4 87, 52 93 C 53.6 98, 56 100.6, 58.6 101.2 C 63 96, 67.6 89.6, 69.8 84.6 C 69 78, 68.8 71.6, 69.4 65.8 Z'),
+  pair('rotator-cuff', 'Rotator cuff', 'M71.6 67.6 C 76 72.6, 80.6 77, 85 80.2 C 86.4 88, 87 95, 87.6 101.6 C 82 101, 76.2 97.6, 72.4 92.6 C 71 86, 71 76, 71.6 67.6 Z'),
+  pair('triceps', 'Triceps', 'M51.4 98.6 C 54 102, 57.4 103.6, 60 103.8 C 62.4 103.2, 64.2 100.8, 65.4 97.8 C 65 108, 63.6 120, 61.6 130.6 C 59 134.4, 54.6 134.4, 52 131.4 C 50.2 124, 49.8 112, 50.6 104 Z'),
+  pair('forearms', 'Forearms', 'M50.6 137.2 C 54 136, 58 136.4, 60 139 C 59.8 150, 58.6 165, 56 178 C 54.8 184, 53.8 188, 52.8 191.4 L 47.4 191.4 C 47 180, 47.4 160, 49 146 Z'),
+  pair('hand-grip', 'Hands & grip', 'M46.6 197.4 L 53.2 197.4 C 55.6 200.6, 57.4 204.6, 58 208 C 58.4 210.6, 58.1 212.2, 57.5 212.3 C 56.7 212.4, 55.6 211.2, 54.9 210.4 C 54.7 214, 54 218.4, 50.8 220.4 C 48 220.8, 46.2 218.6, 45.6 214.8 C 45 209, 45.6 202, 46.6 197.4 Z'),
+  pair('lats', 'Lats', 'M68.6 96 C 74.6 100, 81 103, 88 105.6 C 91.6 110, 94.6 114, 96.4 118.6 C 93 124, 90 130, 88 137 C 84 146, 79 154, 74.4 159.6 C 73.8 154, 74 148, 73.6 142 C 72.8 132, 69.2 122, 68.2 112 C 68 106, 68 100, 68.6 96 Z'),
+  H('lower-back', 'Lower back', 'M100 121.6 C 96.6 124.6, 93.4 129, 90.6 134.6 C 88.6 144, 86.6 152, 85.8 160 C 86 166.6, 87 172, 88.4 177 C 92 179.6, 96 180.6, 100 180.6 '
+    + 'C 104 180.6, 108 179.6, 111.6 177 C 113 172, 114 166.6, 114.2 160 C 113.4 152, 111.4 144, 109.4 134.6 C 106.6 129, 103.4 124.6, 100 121.6 Z'),
+  pair('abductors', 'Hips (sides)', 'M74.6 163 C 78.4 166, 81.6 170, 83.8 176.4 C 81.6 183.6, 76.6 189.4, 68.8 194.2 C 67.8 186, 69.6 174, 74.6 163 Z'),
+  pair('glutes', 'Glutes', 'M98.6 185 C 95 182.4, 90.6 180.6, 86.6 180.4 C 83 186.4, 77 192.6, 70.2 197.4 C 70 206, 71.6 213.6, 75.4 219 C 82 223.2, 92 222.8, 98.6 219.2 Z'),
+  pair('hamstrings', 'Hamstrings', 'M72 225 C 80 228, 90 227.6, 96.6 225.2 C 96 238, 94.4 252, 92 264 C 89 270, 82 271.4, 74.8 268 C 70.8 256, 68.4 242, 68.6 230 C 69.2 228, 70.4 226, 72 225 Z'),
+  pair('calves', 'Calves', 'M75.6 276.6 C 80 278.6, 86 278.4, 91 275 C 92.4 284, 93 296, 92.6 310 C 92 322, 89.4 332, 85.6 338 C 81 336, 77.6 328, 74.6 318 C 72.2 308, 72 298, 73.2 289 C 73.8 284, 74.6 280, 75.6 276.6 Z'),
+  pair('ankles', 'Ankles', 'M81 342.6 L 90.4 342.6 C 91 350, 91.6 356, 91 361 C 91.8 364, 91.6 368, 89.4 369.8 C 87 371, 84 370.8, 82.4 369.4 C 80.6 367.6, 80.4 364, 81 361 C 80.6 356, 80.8 349, 81 342.6 Z'),
 ].join('');
 
-export const BACK_FIGURE = `
-<svg viewBox="0 0 200 380" class="figure" aria-label="Back of the body: tap a muscle">
-  <g class="anatomy">${BACK_BASE}</g>
-  <g class="hotspots">${BACK_HOTSPOTS}</g>
-</svg>`;
+export const BACK_FIGURE = figure({
+  label: 'Back of the body: tap a body part',
+  silhouette: SIL_BACK,
+  forms: BACK_FORMS,
+  details: DETAILS_BACK,
+  hotspots: BACK_HOTSPOTS,
+});
