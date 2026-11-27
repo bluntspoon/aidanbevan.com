@@ -530,6 +530,14 @@ details[open] .ex-toggle svg { transform: rotate(180deg); }
 .ex-diagram .floor { stroke: var(--ember); stroke-width: 2.5; stroke-linecap: round; opacity: 0.5; }
 .ex-diagram .arrow { fill: none; stroke: var(--ember); stroke-width: 3; stroke-linecap: round; }
 .ex-diagram .arrow-head { fill: var(--ember); }
+/* a drawing with two poses is a button: tap it and the figure does one rep */
+.ex-fig { flex: none; width: 108px; display: grid; gap: 6px; justify-items: center; }
+button.ex-diagram {
+  padding: 0; border: 0; color: inherit; font: inherit; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+button.ex-diagram:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+.ex-hint { margin: 0; font-size: 13px; line-height: 17px; color: var(--text-2); text-align: center; }
 .ex-cue { margin: 0; font-size: 14px; line-height: 20px; color: var(--text); }
 .ex-cue strong { margin-bottom: 2px; }
 
@@ -737,7 +745,13 @@ details[open] .ex-toggle svg { transform: rotate(180deg); }
   .peek[open] { animation: ga-sheet 200ms var(--ease-out) both; }
   .peek[open]::backdrop { animation: ga-fade 160ms ease-out both; }
   .pick[open] { animation: ga-sheet 160ms var(--ease-out) both; }
+  /* a rep: the arrow steps aside while the figure moves, the faint start pose and arrow return after */
+  .ex-diagram .anim-arrows { animation: ga-out 160ms ease-out both; }
+  .ex-diagram.is-settling .ghost, .ex-diagram.is-settling .arrow, .ex-diagram.is-settling .arrow-head { animation: ga-in 240ms ease-out both; }
 }
+
+@keyframes ga-out { to { opacity: 0; } }
+@keyframes ga-in { from { opacity: 0; } }
 
 @keyframes ga-sheet {
   from { opacity: 0; transform: translateY(24px); }

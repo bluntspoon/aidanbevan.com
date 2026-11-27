@@ -89,7 +89,8 @@ const C = (c, r, cls = 'eq', extra = {}) => ({ k: 'circle', c, r, cls, ...extra 
 const POLY = (pts, cls = 'eq-fill', extra = {}) => ({ k: 'poly', pts, cls, ...extra });
 const RECT = (x1, y1, x2, y2, cls = 'eq-fill', extra = {}) => POLY([[x1, y1], [x2, y1], [x2, y2], [x1, y2]], cls, extra);
 const ghosted = (items) => items.map((it) => ({ ...it, ghost: true }));
-const front = (items) => items.map((it) => ({ ...it, z: 'front' }));
+let groups = 0; // pieces drawn together (a dumbbell's handle and blocks) move together
+const front = (items) => { groups += 1; return items.map((it) => ({ ...it, z: 'front', grp: it.grp ?? groups })); };
 
 /** A dumbbell centred on `c`: a handle with a block at each end. `vertical` turns the handle upright. */
 function dumbbell(c, vertical = false) {
@@ -157,6 +158,10 @@ function cable(pulley, to, railTop = null, railBottom = FLOOR) {
 
 /** A resistance band: a wavy line from `a` to `b`. */
 function band(a, b, waves = 3, amp = 3.2) {
+  return [{ k: 'path', d: bandPath(a, b, waves, amp), cls: 'eq-line', z: 'front', band: { a, b, waves, amp } }];
+}
+
+function bandPath(a, b, waves, amp) {
   const dx = b[0] - a[0];
   const dy = b[1] - a[1];
   const len = Math.hypot(dx, dy) || 1;
@@ -171,7 +176,7 @@ function band(a, b, waves = 3, amp = 3.2) {
     const sign = i % 2 === 0 ? 1 : -1;
     d.push(['Q', a[0] + dx * tm + nx * amp * 2 * sign, a[1] + dy * tm + ny * amp * 2 * sign, a[0] + dx * t1, a[1] + dy * t1]);
   }
-  return [{ k: 'path', d, cls: 'eq-line', z: 'front' }];
+  return d;
 }
 
 /** A machine frame: two vertical rails with a seat between them. */
@@ -182,7 +187,8 @@ function machine(x1, x2, top, seat = null, floor = FLOOR) {
 }
 
 /** A pull-up bar: a thick bar with short end posts. */
-const pullBar = (x1, x2, y) => [L([x1, y], [x2, y], 'eq'), L([x1, y], [x1, y + 10], 'rail'), L([x2, y], [x2, y + 10], 'rail')];
+// the pull-up bar end-on, hung from a short rail: one bar for the whole hanging family
+const hangBar = (bar) => [L(bar, [bar[0], bar[1] - 12], 'rail'), L([bar[0], bar[1] - 12], [bar[0] + 36, bar[1] - 12], 'rail'), ...front([C(bar, 4.5, 'eq-block')])];
 const wall = (x, top = 4, floor = FLOOR) => [L([x, top], [x, floor], 'rail')];
 const post = (x, top, floor = FLOOR) => [L([x, top], [x, floor], 'rail')];
 
@@ -614,24 +620,32 @@ const A = {
   },
 
   pull_hanging({ grip = 'over' } = {}) {
+    // The bar end-on, so the head can rise behind it: at the top the chin is level with the bar and
+    // the head clear of it, the elbows bent down in front of the body, both hands on the bar.
+    // The shoulders sit close in under the bar, so the elbows have room to bend forward of it.
+    const bar = [60, 0];
     const solid = {
-      h: [45, -7], s: [49, 9], p: [49, 40],
-      e: grip === 'under' ? [64, 18] : [38, 18], w: [60, 0], E: grip === 'under' ? [62, 19] : [36, 19], W: [57, 0],
-      k: [53, 60], a: [47, 79], t: [53, 84], K: [50, 61], A: [44, 80], T: [50, 85],
+      h: [48, 0], s: [51, 15], p: [52, 46],
+      e: [67, 15.5], w: bar, E: [65.1, 15], W: [58, 0],
+      k: [56, 66], a: [50, 85], t: [56, 90], K: [53, 67], A: [47, 86], T: [53, 91],
     };
-    const ghost = shift(solid, 0, 20, ['h', 's', 'p', 'k', 'a', 't', 'K', 'A', 'T']);
-    Object.assign(ghost, { h: [46, 13], e: [57, 14], E: [55, 14] });
+    // the start: a dead hang, arms straight up from the shoulders, the body below
+    const ghost = shift(solid, 6, 17.8, ['p', 'k', 'a', 't', 'K', 'A', 'T']);
+    Object.assign(ghost, { h: [52, 19], s: [57, 32.8], e: [58.5, 16.8], E: [57.5, 16.8] });
+    const items = hangBar(bar);
     return {
-      solid, ghost, eq: pullBar(28, 78, 0), joint: grip === 'under' ? 'e' : 's',
-      arrows: [{ from: [72, 42], to: [72, 14], bulge: -6 }], floor: null,
+      solid, ghost, eq: items, joint: grip === 'under' ? 'e' : 's',
+      arrows: [{ from: [80, 40], to: [80, 14], bulge: -6 }], floor: null,
     };
   },
+
+
 
   hang({ towel = false, legs = 'none' } = {}) {
     const top = 0;
     const solid = {
       h: [46, 26], s: [50, 41], p: [50, 72],
-      e: [58, 22], w: [60, towel ? 12 : top], E: [55, 22], W: [56, towel ? 12 : top],
+      e: [58, 22], w: [60, towel ? 12 : top], E: [55, 22], W: [58, towel ? 12 : top],
       k: [52, 94], a: [50, 115], t: [56, 119], K: [48, 94], A: [46, 115], T: [52, 119],
     };
     let ghost = null;
@@ -653,23 +667,26 @@ const A = {
       ghost = pose(ghost, { a: [50, 120], t: [58, 124], A: [46, 120], T: [54, 124] });
       arrows.push({ from: [72, 118], to: [72, 96], bulge: -4 });
     }
-    const items = pullBar(30, 80, top);
-    if (towel) items.push(...band([60, top], [60, 12], 2, 1.6), ...band([56, top], [56, 12], 2, 1.6));
+    const items = hangBar([60, top]);
+    if (towel) items.push(...band([60, top], [60, 12], 2, 1.6), ...band([58, top], [58, 12], 2, 1.6));
     return { solid, ghost, eq: items, joint, arrows, floor: legs === 'none' ? 128 : null };
   },
 
   inverted_row() {
+    // the bar is end-on over the upper chest; the body pivots on the heels
+    const bar = [40, 48];
     const solid = {
-      h: [20, 56], s: [32, 63], p: [64, 80], e: [44, 74], w: [34, 50], E: [42, 75], W: [32, 50],
-      k: [80, 89], a: [96, 97], t: [101, 90], K: [79, 90], A: [94, 98], T: [99, 91],
+      h: [20, 52], s: [33, 58], p: [64, 75], e: [46.2, 67], w: bar, E: [44.2, 67.5], W: [38, 48],
+      k: [83.4, 81.1], a: [96, 97], t: [101, 90], K: [82.4, 82.1], A: [94, 98], T: [99, 91],
     };
     const ghost = {
-      h: [20, 74], s: [33, 78], p: [64, 88], e: [33, 64], w: [34, 50], E: [31, 64], W: [32, 50],
-      k: [80, 93], a: [96, 98], t: [101, 91], K: [79, 94], A: [94, 99], T: [99, 92],
+      h: [9.7, 78.2], s: [23.9, 79.8], p: [58.7, 86.2], e: [31.1, 65.7], w: bar, E: [29.1, 66], W: [38, 48],
+      k: [79, 85.9], a: [96, 97], t: [98.5, 88.8], K: [78, 86.9], A: [94, 98], T: [96.5, 89.8],
     };
-    const items = [L([34, 44], [34, FLOOR], 'rail'), ...front([C([34, 50], 4.5, 'eq-block')])];
-    return { solid, ghost, eq: items, joint: 's', arrows: [{ from: [12, 90], to: [12, 64], bulge: 4 }], floor: FLOOR };
+    const items = [L([40, 42], [40, FLOOR], 'rail'), ...front([C(bar, 4.5, 'eq-block')])];
+    return { solid, ghost, eq: items, joint: 'e', arrows: [{ from: [4, 96], to: [6, 60], bulge: 4 }], floor: FLOOR };
   },
+
 
   /* ---------- floor push and plank family */
 
@@ -696,9 +713,11 @@ const A = {
       joint = 'e';
     } else if (variant === 'climber') {
       ghost = pose(solid);
-      solid = pose(solid, { k: [60, 82], a: [48, 94], t: [52, 99] });
+      solid = pose(solid, { k: [60.8, 79.5], a: [45.5, 87], t: [52.5, 90.4] });
       joint = 'p';
-      return { solid, ghost, eq: [], joint, arrows: [{ from: [12, 80], to: [52, 74], bulge: 10 }], floor: 102 };
+      // halfway: the knee passes under the hip with the shin folded up behind it, the foot off the floor
+      const via = { p: [43, 76], k: [52, 91.6], a: [38.1, 81.9], t: [30.3, 82.6] };
+      return { solid, ghost, via, eq: [], joint, arrows: [{ from: [12, 80], to: [52, 74], bulge: 10 }], floor: 102 };
     }
     return { solid, ghost, eq: items, joint, arrows: [{ from: [98, 86], to: [98, 58], bulge: -4 }], floor: 102 };
   },
@@ -741,8 +760,12 @@ const A = {
       K: [82, 77], A: [102, 80], T: [107, 76],
       k: [72, 94], a: [84, 96], t: [90, 99],
     };
-    const ghost = pose(solid, { p: [60, 94], K: [82, 88] });
-    return { solid, ghost, eq: [RECT(90, 84, 120, FLOOR - 4, 'eq-fill')], joint: 'p', arrows: [{ from: [52, 106], to: [56, 80], bulge: 6 }], floor: 100 };
+    // the top hand rests on the hip and goes down with it
+    const ghost = pose(solid, { p: [62, 90], K: [82, 90], E: [36, 84], W: [49, 89] });
+    return {
+      solid, ghost, eq: [RECT(90, 84, 120, FLOOR - 4, 'eq-fill')], joint: 'p', arrows: [{ from: [52, 106], to: [56, 80], bulge: 6 }], floor: 100,
+      hold: ['A'], // the top ankle stays on the bench
+    };
   },
 
   ab_wheel() {
@@ -766,9 +789,10 @@ const A = {
       e: [29, 45], w: [31, 64], E: [27, 46], W: [29, 64],
       k: [66, 86], a: [88, 96], t: [94, 90], K: [65, 87], A: [87, 97], T: [93, 91],
     };
+    // the top: arms straight from the hands on the bench, the hips up and forward on the heels
     const ghost = {
-      h: [40, 24], s: [36, 40], p: [38, 70], e: [34, 52], w: [31, 64], E: [32, 52], W: [29, 64],
-      k: [62, 76], a: [88, 96], t: [94, 90], K: [61, 77], A: [87, 97], T: [93, 91],
+      h: [53, 18], s: [50, 33], p: [57, 63.5], e: [40.8, 48.1], w: [31, 64], E: [38.8, 48.6], W: [29, 64],
+      k: [72, 72], a: [88, 96], t: [94, 90], K: [71, 73], A: [87, 97], T: [93, 91],
     };
     return { solid, ghost, eq: bench(0, 30, 64), joint: 'e', arrows: [{ from: [56, 28], to: [56, 54], bulge: -4 }], floor: 100 };
   },
@@ -779,8 +803,9 @@ const A = {
       E: [70, 81], W: [70, 98], K: [36, 97], A: [16, 98], T: [10, 98],
     };
     const ghost = pose(base, { e: [72, 81], w: [72, 98], k: [38, 97], a: [18, 98], t: [12, 98] });
-    const solid = pose(base, { e: [86, 58], w: [102, 54], k: [18, 63], a: [0, 62], t: [-6, 58] });
-    return { solid, ghost, eq: [], joint: 'p', arrows: [{ from: [22, 88], to: [6, 70], bulge: 6 }], floor: 102 };
+    // the raised leg reaches straight back at the kneeling leg's thigh and shin lengths
+    const solid = pose(base, { e: [86, 58], w: [102, 54], k: [3, 62.2], a: [-17, 61.1], t: [-22, 57.8] });
+    return { solid, ghost, eq: [], joint: 'p', arrows: [{ from: [14, 96], to: [-8, 74], bulge: 6 }], floor: 102 };
   },
 
   /* ---------- prone (face down) */
@@ -960,12 +985,17 @@ const A = {
       ghost = pose(STAND, { e: [42, 36], w: [50, 24], E: [40, 37], W: [48, 25] });
       items = [...barbellSide([58, 37]), ...ghosted(barbellSide([48, 22]))];
     } else if (mode === 'single-leg') {
-      solid = pose(solid, {
-        p: [36, 54], s: [66, 44], h: [78, 38], e: [66, 62], w: [65, 78], E: [63, 47], W: [70, 54],
-        k: [48, 77], a: [46, 100], t: [55, 100], K: [16, 52], A: [-6, 52], T: [-9, 59],
-      });
-      ghost = pose(STAND, { K: [44, 74], A: [38, 92], T: [44, 96] });
-      items = [...kettlebell([65, 78]), ...ghosted(kettlebell([54, 58]))];
+      // both arms hang straight down from the shoulders all the way: the weight ends up in front
+      // of the standing leg, clear of it, as the torso goes level
+      solid = {
+        h: [81, 45], s: [67, 48], p: [37, 58], e: [67, 63.5], w: [67, 79], E: [65, 63.5], W: [65, 79],
+        k: [44.5, 78.8], a: [44, 100], t: [53, 100], K: [15, 60], A: [-6, 62], T: [-7.5, 71],
+      };
+      ghost = {
+        h: [44, 11.5], s: [43, 26.5], p: [43, 57.5], e: [43, 42], w: [43, 57.5], E: [41, 42], W: [41, 57.5],
+        k: [45, 79], a: [44, 100], t: [53, 100], K: [41, 79], A: [38, 98], T: [46, 99],
+      };
+      items = [...kettlebell(solid.w), ...ghosted(kettlebell(ghost.w))];
     } else if (mode === 'kickback') {
       solid = pose(solid, {
         h: [72, 22], s: [64, 34], p: [44, 58], e: [76, 42], w: [88, 44], E: [74, 43], W: [86, 45],
@@ -981,7 +1011,8 @@ const A = {
       });
       solid.h = [70, 44];
       ghost = { h: [72, 24], s: solid.s };
-      items = [L([70, 52], [70, 72], 'eq-line'), ...plate([70, 80], 8)];
+      // the plate hangs from the head on its chain: one piece, so it moves with the head
+      items = [L([70, 52], [70, 72], 'eq-line'), ...plate([70, 80], 8)].map((it) => ({ ...it, grp: 'harness' }));
       joint = neckOf(solid);
       arrows = [{ from: [84, 22], to: [82, 46], bulge: -6 }];
     }
@@ -1049,10 +1080,13 @@ const A = {
       e: [18, 97], w: [5, 94], E: [38, 82], W: [52, 84],
       K: [82, 96], A: [62, 97], T: [56, 97],
     };
-    const ghost = pose(base, { k: [82, 89], a: [62, 93], t: [56, 92] });
     const solid = pose(base, { k: [74, 68], a: [62, 93], t: [56, 92] });
+    // the start: the finish's top leg turned down about the hip onto the bottom leg, at the same lengths
+    const ghost = pose(base, { k: [86.1, 88.8], a: [58.7, 93.4], t: [52.7, 92.4] });
     const items = eq === 'band' ? band([74, 70], [82, 94], 2, 2) : [];
-    return { solid, ghost, eq: items, joint: 'p', arrows: [{ from: [94, 86], to: [84, 62], bulge: 6 }], floor: 101 };
+    return {
+      solid, ghost, eq: items, joint: 'p', arrows: [{ from: [94, 86], to: [84, 62], bulge: 6 }], floor: 101,
+    };
   },
 
   side_lying({ mode = 'leg' } = {}) {
@@ -1641,7 +1675,10 @@ A.wrist = ({ mode = 'curl' } = {}) => {
 
 A.tke = () => {
   const solid = pose(STAND, { k: [52, 79], K: [47, 79], A: [44, 100], T: [53, 100] });
-  const ghost = { p: STAND.p, k: [60, 78], a: STAND.a, K: [55, 78] };
+  // a soft knee lowers the hips: the leg is no shorter, it is bent
+  const ghost = {
+    ...shift(solid, -2, 3.5, ['h', 's', 'e', 'w', 'E', 'W']), p: [48, 60.5], k: [58, 80.2], K: [53, 80],
+  };
   const items = [...post(104, 66), ...band([54, 80], [104, 82], 4, 2.4)];
   return { solid, ghost, eq: items, joint: 'k', arrows: [{ from: [72, 64], to: [60, 66], bulge: -4 }], floor: FLOOR };
 };
@@ -1659,14 +1696,258 @@ function guess(id) {
 
 /* ------------------------------------------------------------------ rendering */
 
+const scenes = new Map();
 function scene(id) {
+  const key = String(id);
+  if (!scenes.has(key)) scenes.set(key, buildScene(id));
+  return scenes.get(key);
+}
+
+function buildScene(id) {
   const [name, opts] = EXERCISE_DIAGRAMS[id] ?? guess(String(id));
   const built = A[name](opts ?? {});
   const view = built.view ?? 'side';
   const solid = built.solid;
+  const ghostKeys = built.ghost ? Object.keys(built.ghost) : [];
   // A ghost may list only the joints that move; fill the rest from the solid pose.
-  const ghost = built.ghost ? { ...solid, ...built.ghost } : null;
-  return { name, view, solid, ghost, eq: built.eq ?? [], joint: built.joint, arrows: built.arrows ?? [], floor: built.floor };
+  let ghost = built.ghost ? startPose(solid, { ...solid, ...built.ghost }, ghostKeys, view) : null;
+  let eq = built.eq ?? [];
+  if (ghost && !built.startAsDrawn) {
+    const drawn = ghost;
+    ghost = fitStart(solid, drawn, view, built.floor, built.hold ?? []);
+    eq = carryGhostEq(eq, drawn, ghost);
+  }
+  return {
+    name, view, solid, ghost, eq, joint: built.joint, arrows: built.arrows ?? [], floor: built.floor, ghostKeys,
+    startAsDrawn: built.startAsDrawn ?? null, via: built.via ?? null,
+  };
+}
+
+/* ------------------------------------------------------------------ one skeleton, two poses */
+
+// The bones of the figure. Some are drawn (limbs), some are not (head to shoulder, shoulders to the
+// neck in a front view) but are still bones: the same figure, so the same lengths in both poses.
+export const BONES = {
+  side: [
+    ['s', 'h'], ['s', 'm'], ['m', 'p'], ['s', 'p'],
+    ['s', 'e'], ['e', 'w'], ['w', 'x'], ['s', 'E'], ['E', 'W'], ['W', 'X'],
+    ['p', 'k'], ['k', 'a'], ['a', 't'], ['p', 'K'], ['K', 'A'], ['A', 'T'],
+  ],
+  front: [
+    ['n', 'h'], ['n', 'q'], ['n', 'sl'], ['n', 'sr'], ['sl', 'el'], ['el', 'hl'], ['sr', 'er'], ['er', 'hr'],
+    ['q', 'pl'], ['q', 'pr'], ['pl', 'kl'], ['kl', 'al'], ['al', 'tl'], ['pr', 'kr'], ['kr', 'ar'], ['ar', 'tr'],
+  ],
+};
+/** The bones present in a pose: a mid-spine point replaces the straight shoulder-hip bone. */
+export function bonesOf(keys, view) {
+  const has = (k) => keys.includes(k);
+  return BONES[view === 'front' ? 'front' : 'side'].filter(([a, b]) => has(a) && has(b) && !(a === 's' && b === 'p' && has('m')));
+}
+
+const MOVE_EPS = 1.5; // a joint that travels less than this (design units) is planted
+const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+
+/** The start pose as drawn, made whole: a straight back unless it bends its own, far limbs going with near. */
+function startPose(solid, ghost, ghostKeys, view) {
+  const out = { ...ghost };
+  // A ghost that bends no mid-spine of its own takes a straight back, not the solid's bend.
+  if (solid.m && !ghostKeys.includes('m')) out.m = lerp(out.s, out.p, 0.5);
+  // A start pose that moves the hips and the near knee but leaves the far knee where it was (the
+  // plank's sag) would tear the far leg off the hips: the far knee goes with the near one.
+  if (view === 'side') {
+    for (const [near, far, root] of [['k', 'K', 'p'], ['e', 'E', 's']]) {
+      const moves = (k) => solid[k] && out[k] && dist(solid[k], out[k]) > MOVE_EPS;
+      if (moves(near) && moves(root) && solid[far] && same(solid[far], out[far])) {
+        out[far] = add(solid[far], out[near][0] - solid[near][0], out[near][1] - solid[near][1]);
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * The start pose redrawn on the finish pose's skeleton: every bone takes its length in `solid`,
+ * and keeps its drawn direction wherever it can. Joints that hold the figure in place stay exactly
+ * where they are drawn: a hand or toe that does not move between the poses (on a bar, a handle, the
+ * floor), anything lying still on the floor, and any joint the archetype names in `hold` (an ankle
+ * on a bench); a joint on the floor that moves may slide along it. Between two such anchors the
+ * chain is solved inward (only the elbows, knees and hips in between move); every limb hanging off
+ * that frame is laid out from it bone by bone, in the drawn direction at the finish length.
+ */
+function fitStart(solid, ghost, view, floor, hold) {
+  const keys = Object.keys(ghost);
+  const bones = bonesOf(keys, view);
+  const adj = new Map(keys.map((k) => [k, []]));
+  for (const [a, b] of bones) { adj.get(a).push(b); adj.get(b).push(a); }
+  const inSkeleton = keys.filter((k) => adj.get(k).length);
+  const travel = (k) => dist(ghost[k], solid[k]);
+  // a joint resting on the floor may slide along it, but not leave it
+  const onFloor = (k) => floor != null && ghost[k][1] >= floor - 5 && ghost[k][1] <= floor + 0.5;
+  // Contacts: a hand or foot that does not move (on a bar, a handle, the floor), and anything lying
+  // on the floor that does not move (an elbow in a plank, the back in a bridge).
+  const contact = (k, eps) => hold.includes(k) || (travel(k) < eps && (ENDS.has(k) || onFloor(k)));
+  // Strictest first; a foot may lift off the floor only when nothing else fits (stepping off a box
+  // to hang from a bar)
+  const attempts = [[MOVE_EPS, true], [0.01, true], [0.01, false]];
+  let best = null;
+  for (const [eps, slide] of attempts) {
+    const pins = new Set(inSkeleton.filter((k) => contact(k, eps)));
+    const slides = new Set(slide ? inSkeleton.filter((k) => !pins.has(k) && onFloor(k)) : []);
+    if (!pins.size && !slides.size) pins.add(view === 'front' ? 'q' : 'p');
+    // the joints the drawing moves are where it wants them: they give way less than the rest
+    const stiff = (k) => (travel(k) >= MOVE_EPS ? 0.25 : 1);
+    const fit = fitWith(solid, ghost, keys, bones, adj, pins, slides, stiff);
+    if (!best || fit.residual < best.residual - 1e-9) best = fit;
+    if (fit.residual < 1e-9) break;
+  }
+  const out = best.out;
+  // a joint that comes back to where the finish has it is the finish's joint
+  for (const k of keys) if (dist(out[k], solid[k]) < 1e-9) out[k] = solid[k];
+  return out;
+}
+const ENDS = new Set(['w', 'W', 'x', 'X', 't', 'T', 'hl', 'hr', 'tl', 'tr']); // hands, fingertips, toes
+
+function fitWith(solid, ghost, keys, bones, adj, pins, slides, stiff) {
+  // the frame: the joints on a path between two anchors (prune free leaves until none is left)
+  const core = new Set(keys.filter((k) => adj.get(k).length));
+  for (let pruned = true; pruned;) {
+    pruned = false;
+    for (const k of [...core]) {
+      if (pins.has(k) || slides.has(k)) continue;
+      if (adj.get(k).filter((n) => core.has(n)).length <= 1) { core.delete(k); pruned = true; }
+    }
+  }
+  const out = {};
+  for (const k of keys) out[k] = [...ghost[k]];
+  const frame = bones.filter(([a, b]) => core.has(a) && core.has(b)).map(([a, b]) => [a, b, dist(solid[a], solid[b])]);
+  // Unknowns: x and y of each free joint in the frame, x only for one on the floor.
+  const vars = [];
+  for (const k of core) {
+    if (pins.has(k)) continue;
+    vars.push([k, 0]);
+    if (!slides.has(k)) vars.push([k, 1]);
+  }
+  const residual = settleBones(out, frame, vars, stiff);
+  // lay out everything hanging off the frame, bone by bone, in the drawn direction
+  const placed = new Set(core);
+  const queue = [...core];
+  while (queue.length) {
+    const p = queue.shift();
+    for (const c of adj.get(p)) {
+      if (placed.has(c)) continue;
+      const v = [ghost[c][0] - ghost[p][0], ghost[c][1] - ghost[p][1]];
+      const l = Math.hypot(v[0], v[1]);
+      const L = dist(solid[p], solid[c]);
+      const w = l > 1e-9 ? v : [solid[c][0] - solid[p][0], solid[c][1] - solid[p][1]];
+      const wl = Math.hypot(w[0], w[1]) || 1;
+      out[c] = [out[p][0] + (w[0] / wl) * L, out[p][1] + (w[1] / wl) * L];
+      placed.add(c);
+      queue.push(c);
+    }
+  }
+  return { out, residual };
+}
+
+/**
+ * Move the joints named in `vars` ([joint, axis] pairs: 0 for x, 1 for y) until every bone in
+ * `bones` ([a, b, length]) has its length, changing `joints` in place. Gauss-Newton, smallest
+ * (weighted by `stiff`) step each time: the joints move as little as the lengths need, so the limbs
+ * keep the directions they had. Damped, halved when a step makes it worse. Returns the largest
+ * length error left (0 when the lengths can all be met).
+ */
+export function settleBones(joints, bones, vars, stiff = () => 1, iterations = 200) {
+  const out = joints;
+  const residuals = () => bones.map(([a, b, L]) => dist(out[a], out[b]) - L);
+  const worst = () => Math.max(0, ...residuals().map(Math.abs));
+  for (let it = 0; it < iterations && vars.length && bones.length; it += 1) {
+    const r = residuals();
+    const e0 = Math.max(...r.map(Math.abs));
+    if (e0 < 1e-12) break;
+    const J = bones.map(([a, b]) => {
+      const d = [out[b][0] - out[a][0], out[b][1] - out[a][1]];
+      const l = Math.hypot(d[0], d[1]) || 1e-9;
+      return vars.map(([k, ax]) => (k === b ? d[ax] / l : k === a ? -d[ax] / l : 0));
+    });
+    // (J W J^T + mu I) y = r ; step = -W J^T y
+    const give = vars.map(([k]) => stiff(k));
+    const M = J.map((ri, i) => J.map((rj, j) => ri.reduce((sum, v, c) => sum + v * give[c] * rj[c], 0) + (i === j ? 1e-9 + 1e-3 * e0 : 0)));
+    const y = solveLinear(M, r);
+    if (!y) break;
+    const step = vars.map((_, c) => -give[c] * J.reduce((sum, row, i) => sum + row[c] * y[i], 0));
+    const saved = vars.map(([k, ax]) => out[k][ax]);
+    let scale = 1;
+    for (; scale > 1e-4; scale /= 2) {
+      vars.forEach(([k, ax], c) => { out[k] = [...out[k]]; out[k][ax] = saved[c] + step[c] * scale; });
+      if (worst() < e0) break;
+    }
+    if (scale <= 1e-4) { vars.forEach(([k, ax], c) => { out[k][ax] = saved[c]; }); break; }
+  }
+  return worst();
+}
+
+/** Gaussian elimination with partial pivoting; null when the system is singular. */
+function solveLinear(M, r) {
+  const n = r.length;
+  const A2 = M.map((row, i) => [...row, r[i]]);
+  for (let c = 0; c < n; c += 1) {
+    let piv = c;
+    for (let i = c + 1; i < n; i += 1) if (Math.abs(A2[i][c]) > Math.abs(A2[piv][c])) piv = i;
+    if (Math.abs(A2[piv][c]) < 1e-15) return null;
+    [A2[c], A2[piv]] = [A2[piv], A2[c]];
+    for (let i = c + 1; i < n; i += 1) {
+      const f = A2[i][c] / A2[c][c];
+      for (let j = c; j <= n; j += 1) A2[i][j] -= f * A2[c][j];
+    }
+  }
+  const x = new Array(n).fill(0);
+  for (let i = n - 1; i >= 0; i -= 1) {
+    let sum = A2[i][n];
+    for (let j = i + 1; j < n; j += 1) sum -= A2[i][j] * x[j];
+    x[i] = sum / A2[i][i];
+  }
+  return x;
+}
+
+/** Equipment drawn faint at the start goes where the hand (or foot) holding it went. */
+function carryGhostEq(eq, drawn, fitted) {
+  const keys = Object.keys(drawn);
+  const moved = (k) => [fitted[k][0] - drawn[k][0], fitted[k][1] - drawn[k][1]];
+  const reach = (pt, k) => dist(pt, drawn[k]) - (k === 'h' ? HEAD_R : 0);
+  const nearest = (pt, within) => {
+    let best = null;
+    let bd = within;
+    for (const k of keys) { const d = reach(pt, k); if (d <= bd) { bd = d; best = k; } }
+    return best;
+  };
+  const tr = (pt, o) => [pt[0] + o[0], pt[1] + o[1]];
+  const byGroup = new Map();
+  for (const it of eq) if (it.ghost && it.grp != null) byGroup.set(it.grp, [...(byGroup.get(it.grp) ?? []), ...itemPoints(it)]);
+  const groupOff = new Map([...byGroup].map(([g, pts]) => {
+    const k = nearest(centroid(pts), 14);
+    return [g, k ? moved(k) : [0, 0]];
+  }));
+  return eq.map((it) => {
+    if (!it.ghost) return it;
+    if (it.band) {
+      const ka = nearest(it.band.a, 6);
+      const kb = nearest(it.band.b, 6);
+      const a = ka ? tr(it.band.a, moved(ka)) : it.band.a;
+      const b = kb ? tr(it.band.b, moved(kb)) : it.band.b;
+      return { ...it, band: { ...it.band, a, b }, d: bandPath(a, b, it.band.waves, it.band.amp) };
+    }
+    if (it.k === 'line' && it.grp == null) {
+      const ka = nearest(it.a, 6);
+      const kb = nearest(it.b, 6);
+      return { ...it, a: ka ? tr(it.a, moved(ka)) : it.a, b: kb ? tr(it.b, moved(kb)) : it.b };
+    }
+    let o = groupOff.get(it.grp);
+    if (!o) { const k = nearest(centroid(itemPoints(it)), 14); o = k ? moved(k) : [0, 0]; }
+    if (Math.hypot(o[0], o[1]) < 1e-9) return it;
+    if (it.k === 'line') return { ...it, a: tr(it.a, o), b: tr(it.b, o) };
+    if (it.k === 'circle') return { ...it, c: tr(it.c, o) };
+    if (it.k === 'poly') return { ...it, pts: it.pts.map((p) => tr(p, o)) };
+    return { ...it, d: it.d.map(([op, ...v]) => [op, ...v.map((val, i) => val + o[i % 2])]) };
+  });
 }
 
 const same = (a, b) => Math.abs(a[0] - b[0]) < 0.01 && Math.abs(a[1] - b[1]) < 0.01;
@@ -1686,14 +1967,13 @@ function eqPoints(item) {
   return out;
 }
 
-function render(id) {
-  const sc = scene(id);
+/** Where the drawing sits in the 120 box: the scale and offset that make the scene fill it. */
+function layout(sc) {
   const solidSegs = segments(sc.solid, sc.view);
   const ghostSegs = sc.ghost
     ? segments(sc.ghost, sc.view).filter((g) => !solidSegs.some((s) => same(s.a, g.a) && same(s.b, g.b)))
     : [];
   const ghostHead = sc.ghost && !same(sc.ghost.h, sc.solid.h) ? sc.ghost.h : null;
-  const jointPt = Array.isArray(sc.joint) ? sc.joint : (sc.joint === 'neck' ? neckOf(sc.solid) : sc.solid[sc.joint]);
 
   // Bounding box in design units, with margins in output pixels.
   const pts = [];
@@ -1723,8 +2003,12 @@ function render(id) {
   const ty = SIZE / 2 - s * (box.minY + box.maxY) / 2;
   const X = (x) => r1(tx + s * x);
   const Y = (y) => r1(ty + s * y);
-  const P = (pt) => [X(pt[0]), Y(pt[1])];
+  return { solidSegs, ghostSegs, ghostHead, s, box, X, Y };
+}
 
+/** Drawing helpers bound to one layout: equipment, a limb segment, a head. Same markup everywhere. */
+function painter(sc, { s, X, Y }) {
+  const P = (pt) => [X(pt[0]), Y(pt[1])];
   const cls = (base, item) => `${base}${item.ghost ? ' ghost' : ''}`;
   const drawEq = (it) => {
     const c = cls(it.cls, it);
@@ -1738,20 +2022,33 @@ function render(id) {
     const c = `limb${sg.far && sc.view === 'side' ? ' far' : ''}${ghost ? ' ghost' : ''}`;
     return `<line class="${c}" x1="${X(sg.a[0])}" y1="${Y(sg.a[1])}" x2="${X(sg.b[0])}" y2="${Y(sg.b[1])}"/>`;
   };
+  const drawHead = (h, ghost = false) => `<circle class="head${ghost ? ' ghost' : ''}" cx="${X(h[0])}" cy="${Y(h[1])}" r="${HEAD_R}"/>`;
+  const drawJoint = (pt) => `<circle class="joint" cx="${X(pt[0])}" cy="${Y(pt[1])}" r="${JOINT_R}"/>`;
+  const drawFloor = () => (sc.floor != null ? `<line class="floor" x1="4" y1="${Y(sc.floor)}" x2="116" y2="${Y(sc.floor)}"/>` : '');
+  return { drawEq, drawSeg, drawHead, drawJoint, drawFloor };
+}
 
-  let out = '';
-  if (sc.floor != null) out += `<line class="floor" x1="4" y1="${Y(sc.floor)}" x2="116" y2="${Y(sc.floor)}"/>`;
+const jointOf = (sc) => (Array.isArray(sc.joint) ? sc.joint : (sc.joint === 'neck' ? neckOf(sc.solid) : sc.solid[sc.joint]));
+
+function render(id) {
+  const sc = scene(id);
+  const lay = layout(sc);
+  const { solidSegs, ghostSegs, ghostHead, s, box, X, Y } = lay;
+  const { drawEq, drawSeg, drawHead, drawJoint, drawFloor } = painter(sc, lay);
+  const jointPt = jointOf(sc);
+
+  let out = drawFloor();
   const back = sc.eq.filter((it) => it.z !== 'front');
   const fore = sc.eq.filter((it) => it.z === 'front');
   out += back.filter((it) => !it.ghost).map(drawEq).join('');
   out += ghostSegs.map((sg) => drawSeg(sg, true)).join('');
-  if (ghostHead) out += `<circle class="head ghost" cx="${X(ghostHead[0])}" cy="${Y(ghostHead[1])}" r="${HEAD_R}"/>`;
+  if (ghostHead) out += drawHead(ghostHead, true);
   out += [...back, ...fore].filter((it) => it.ghost).map(drawEq).join('');
   out += solidSegs.map((sg) => drawSeg(sg, false)).join('');
-  out += `<circle class="head" cx="${X(sc.solid.h[0])}" cy="${Y(sc.solid.h[1])}" r="${HEAD_R}"/>`;
+  out += drawHead(sc.solid.h);
   out += fore.filter((it) => !it.ghost).map(drawEq).join('');
   for (const ar of sc.arrows) out += arrowSvg(ar, X, Y, s);
-  if (jointPt) out += `<circle class="joint" cx="${X(jointPt[0])}" cy="${Y(jointPt[1])}" r="${JOINT_R}"/>`;
+  if (jointPt) out += drawJoint(jointPt);
   return { svg: out, scene: sc, box: { x: X(box.minX), y: Y(box.minY), w: r1(s * (box.maxX - box.minX)), h: r1(s * (box.maxY - box.minY)) } };
 }
 
@@ -1812,4 +2109,212 @@ export function diagramFor(exerciseOrId) {
   const { svg, scene: sc } = render(id);
   const label = `Stick figure, ${LABEL[sc.view]}: ${sc.name.replace(/_/g, ' ')}, start position faint, finish position solid`;
   return `<svg class="diagram-svg" viewBox="0 0 ${SIZE} ${SIZE}" role="img" aria-label="${label}" xmlns="http://www.w3.org/2000/svg">${svg}</svg>`;
+}
+
+/* ------------------------------------------------------------------ the rig, for the animator */
+
+// The animator (animate.js) moves the figure joint by joint between the two poses. It needs the
+// poses themselves, and a way to draw any in-between pose with exactly the static drawing's scale,
+// classes and stacking order. Equipment is attached here, where the archetypes are known:
+// a dumbbell rides the hand that holds it, a cable's free end follows the hand, a bench stays put.
+
+/**
+ * The two poses of one drawing: { view, solid, ghost, joint, floor, via }. `ghost` is the start of the
+ * rep and `solid` the finish, both complete joint dicts on the same 120x120 design box. `ghost` is
+ * null when the drawing has no second pose (a hold), so there is nothing to animate. `via`, when
+ * given, is where some joints are halfway through the rep (a mountain climber's foot off the floor).
+ */
+export function diagramPose(id) {
+  const sc = scene(id);
+  let ghost = sc.ghost ? { ...sc.ghost } : null;
+  if (ghost && !Object.keys({ ...sc.solid, ...ghost }).some((k) => sc.solid[k] && ghost[k] && dist(sc.solid[k], ghost[k]) > 0.01)) ghost = null;
+  return { view: sc.view, solid: sc.solid, ghost, joint: sc.joint, floor: sc.floor ?? null, startAsDrawn: sc.startAsDrawn, via: sc.via };
+}
+
+/** The limb segments and head of `joints`, drawn exactly like the solid figure of `id`. */
+export function diagramLimbs(id, joints) {
+  const r = rigFor(id);
+  return segments(joints, r.sc.view).map((sg) => r.paint.drawSeg(sg, false)).join('') + r.paint.drawHead(joints.h);
+}
+
+/** The arrows of `id` on their own, in output space, for fading while the figure moves. */
+export function diagramArrows(id) {
+  const r = rigFor(id);
+  return r.sc.arrows.map((ar) => arrowSvg(ar, r.lay.X, r.lay.Y, r.lay.s)).join('');
+}
+
+/**
+ * One frame of the movement: floor, equipment, limbs, head and the joint dot for `joints`, on the
+ * static drawing's layout. `u` is how far from start (0) to finish (1) the rep is, for equipment
+ * that moves on its own track. Ghost pieces and arrows are left out: the moving figure replaces them.
+ */
+export function diagramFrame(id, joints, u = 1) {
+  const r = rigFor(id);
+  const { drawEq, drawSeg, drawHead, drawJoint, drawFloor } = r.paint;
+  const off = (key) => (key && joints[key] ? [joints[key][0] - r.sc.solid[key][0], joints[key][1] - r.sc.solid[key][1]] : [0, 0]);
+  const moved = r.items.map(({ item, at }) => moveItem(item, at, off, u));
+  const back = moved.filter((it) => it.z !== 'front');
+  const fore = moved.filter((it) => it.z === 'front');
+  let out = drawFloor();
+  out += back.map(drawEq).join('');
+  out += segments(joints, r.sc.view).map((sg) => drawSeg(sg, false)).join('');
+  out += drawHead(joints.h);
+  out += fore.map(drawEq).join('');
+  const jp = r.jointAt(joints);
+  if (jp) out += drawJoint(jp);
+  return out;
+}
+
+const rigs = new Map();
+function rigFor(id) {
+  if (rigs.has(id)) return rigs.get(id);
+  const sc = scene(id);
+  const lay = layout(sc);
+  const paint = painter(sc, lay);
+  const pz = diagramPose(id);
+  const solid = sc.solid;
+  const ghost = pz.ghost ?? solid;
+  const moving = Object.keys(solid).filter((k) => ghost[k] && dist(solid[k], ghost[k]) > MOVE_EPS);
+  // distance to a joint; for the head, to the edge of the circle (a plate rests on it, a strap goes round it)
+  const reach = (pt, k) => dist(pt, solid[k]) - (k === 'h' ? HEAD_R : 0);
+  const nearest = (pt, keys, within) => {
+    let best = null;
+    let bd = within;
+    for (const k of keys) { const d = reach(pt, k); if (d <= bd) { bd = d; best = k; } }
+    return best;
+  };
+
+  const ghosts = sc.eq.filter((it) => it.ghost);
+  const used = new Set();
+  const items = [];
+  for (const item of sc.eq) {
+    if (item.ghost) continue;
+    items.push({ item, at: attach(item) });
+  }
+  // a piece drawn with others (a bar and its plates) goes where the first of them attached goes
+  for (const entry of items) {
+    if (entry.at || entry.item.grp == null || entry.item.cls === 'rail') continue;
+    const lead = items.find((o) => o.item.grp === entry.item.grp && o.at && (o.at.key || o.at.track));
+    if (lead) entry.at = lead.at;
+  }
+  function attach(item) {
+    if (!pz.ghost || item.cls === 'rail' || item.cls === 'floor') return null;
+    if (item.band) {
+      const ea = nearest(item.band.a, moving, 6);
+      const eb = nearest(item.band.b, moving, 6);
+      return ea || eb ? { band: [ea, eb] } : null;
+    }
+    const pts = itemPoints(item);
+    const c = centroid(pts);
+    // the same piece drawn faint at the start: it travels from there to here
+    const sig = signature(item);
+    const twin = ghosts.find((g) => !used.has(g) && signature(g) === sig);
+    if (twin) {
+      used.add(twin);
+      const tc = centroid(itemPoints(twin));
+      const D = [tc[0] - c[0], tc[1] - c[1]];
+      if (Math.hypot(...D) > MOVE_EPS) {
+        let best = null;
+        let score = Math.max(6, 0.35 * Math.hypot(...D));
+        for (const k of moving) {
+          const dj = [ghost[k][0] - solid[k][0], ghost[k][1] - solid[k][1]];
+          const sc2 = Math.hypot(dj[0] - D[0], dj[1] - D[1]) + 0.3 * dist(c, solid[k]);
+          if (sc2 < score) { score = sc2; best = k; }
+        }
+        return best ? { key: best } : { track: D };
+      }
+    }
+    // a small piece in or next to a moving hand (or foot) rides it
+    const xs = pts.map((p) => p[0]);
+    const ys = pts.map((p) => p[1]);
+    const span = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
+    if (span <= 30 && item.cls !== 'eq-fill') {
+      const k = nearest(c, moving, 12);
+      if (k) return { key: k };
+    }
+    // a bar held in a moving hand rides it
+    if (item.k === 'line' && item.cls === 'eq') {
+      const hands = moving.filter((k) => ['w', 'W', 'hl', 'hr'].includes(k));
+      const k = hands.find((h) => segDist(solid[h], item.a, item.b) <= 6);
+      if (k) return { key: k };
+    }
+    // a cable or strap: the end at the hand follows it, the anchor stays
+    if (item.k === 'line') {
+      const ea = nearest(item.a, moving, 8);
+      const eb = nearest(item.b, moving, 8);
+      if (ea || eb) return { ends: [ea, eb] };
+    }
+    // a rope from hand to hand: each end goes with its hand, the loop between follows both
+    if (item.k === 'path') {
+      const ea = nearest(pts[0], moving, 6);
+      const eb = nearest(pts[pts.length - 1], moving, 6);
+      if (ea && eb) return { ends: [ea, eb] };
+    }
+    return null;
+  }
+
+  let jointAt = () => null;
+  const jp = jointOf(sc);
+  if (typeof sc.joint === 'string' && sc.joint !== 'neck') jointAt = (j) => j[sc.joint] ?? jp;
+  else if (jp && (sc.joint === 'neck' || same(jp, neckOf(solid)))) jointAt = (j) => neckOf(j);
+  else if (jp) {
+    const k = nearest(jp, Object.keys(solid), Infinity);
+    jointAt = (j) => [jp[0] + j[k][0] - solid[k][0], jp[1] + j[k][1] - solid[k][1]];
+  }
+
+  const rig = { sc, lay, paint, items, jointAt };
+  rigs.set(id, rig);
+  return rig;
+}
+
+function segDist(p, a, b) {
+  const v = [b[0] - a[0], b[1] - a[1]];
+  const L2 = v[0] * v[0] + v[1] * v[1] || 1;
+  const t = Math.max(0, Math.min(1, ((p[0] - a[0]) * v[0] + (p[1] - a[1]) * v[1]) / L2));
+  return dist(p, [a[0] + v[0] * t, a[1] + v[1] * t]);
+}
+
+function itemPoints(it) {
+  if (it.k === 'line') return [it.a, it.b];
+  if (it.k === 'circle') return [it.c];
+  if (it.k === 'poly') return it.pts;
+  const out = [];
+  for (const cmd of it.d) for (let i = 1; i < cmd.length; i += 2) out.push([cmd[i], cmd[i + 1]]);
+  return out;
+}
+const centroid = (pts) => [pts.reduce((a, p) => a + p[0], 0) / pts.length, pts.reduce((a, p) => a + p[1], 0) / pts.length];
+function signature(it) {
+  const pts = itemPoints(it);
+  const [x0, y0] = pts[0];
+  return `${it.k}|${it.cls}|${it.r ?? ''}|${pts.map((p) => `${Math.round(p[0] - x0)},${Math.round(p[1] - y0)}`).join(' ')}`;
+}
+
+function moveItem(item, at, off, u) {
+  if (!at) return item;
+  const tr = (pt, o) => [pt[0] + o[0], pt[1] + o[1]];
+  if (at.band) {
+    const a = tr(item.band.a, off(at.band[0]));
+    const b = tr(item.band.b, off(at.band[1]));
+    return { ...item, d: bandPath(a, b, item.band.waves, item.band.amp) };
+  }
+  if (at.ends && item.k === 'path') {
+    const oa = off(at.ends[0]);
+    const ob = off(at.ends[1]);
+    const n = item.d.reduce((sum, cmd) => sum + (cmd.length - 1) / 2, 0);
+    let i = 0;
+    return {
+      ...item,
+      d: item.d.map(([op, ...v]) => [op, ...v.map((val, j) => {
+        const f = (i + Math.floor(j / 2)) / Math.max(1, n - 1);
+        if (j === v.length - 1) i += v.length / 2;
+        return val + (j % 2 === 0 ? oa[0] + (ob[0] - oa[0]) * f : oa[1] + (ob[1] - oa[1]) * f);
+      })]),
+    };
+  }
+  if (at.ends) return { ...item, a: tr(item.a, off(at.ends[0])), b: tr(item.b, off(at.ends[1])) };
+  const o = at.key ? off(at.key) : [at.track[0] * (1 - u), at.track[1] * (1 - u)];
+  if (item.k === 'line') return { ...item, a: tr(item.a, o), b: tr(item.b, o) };
+  if (item.k === 'circle') return { ...item, c: tr(item.c, o) };
+  if (item.k === 'poly') return { ...item, pts: item.pts.map((p) => tr(p, o)) };
+  return { ...item, d: item.d.map(([op, ...v]) => [op, ...v.map((val, i) => val + o[i % 2])]) };
 }

@@ -2,7 +2,8 @@
 import { MUSCLES, BY_MUSCLE } from './muscles.js';
 import { EXERCISES, EQUIPMENT_LABEL, exercisesFor } from './exercises.js';
 import { FRONT_FIGURE, BACK_FIGURE, VIEWBOX, HITS, ringDistance, flatten } from './body-map.js';
-import { diagramFor } from './diagram.js';
+import { diagramFor, diagramPose } from './diagram.js';
+import { wireDiagrams, stopDiagrams, motionAllowed } from './animate.js';
 import { getGoals, isGoal, setGoal, onGoalsChange } from './goals.js';
 import { LEVEL_CHOICES, LEVEL_NOTE, choiceFor, movesFor, levelCounts, usableLevel, startLabel } from './pick.js';
 
@@ -310,6 +311,19 @@ function stepsList(steps) {
   return `<ol class="ex-steps">${steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('')}</ol>`;
 }
 
+/**
+ * The how-to drawing. Where the movement has a start and a finish pose (and motion is welcome),
+ * the whole picture is a button: tap it and the figure does one rep. Otherwise, the still drawing.
+ */
+function diagramBlock(exercise) {
+  const still = `<figure class="ex-diagram" aria-label="How to do a ${escapeHtml(exercise.name)}, start and end position">${diagramFor(exercise)}</figure>`;
+  if (!motionAllowed() || !diagramPose(exercise.id).ghost) return still;
+  return `<div class="ex-fig">
+              <button type="button" class="ex-diagram" data-anim="${escapeHtml(exercise.id)}" aria-label="Play ${escapeHtml(exercise.name)}">${diagramFor(exercise)}</button>
+              <p class="ex-hint" hidden>Tap the picture to watch it move</p>
+            </div>`;
+}
+
 function exerciseRow(exercise, index) {
   const secondary = exercise.secondary.map((id) => BY_MUSCLE[id]?.name).filter(Boolean);
   const meta = [capital(exercise.level), EQUIPMENT_LABEL[exercise.equipment], exercise.place === 'home' ? 'Home' : 'Gym'].join(' · ');
@@ -326,7 +340,7 @@ function exerciseRow(exercise, index) {
         </summary>
         <div class="ex-body">
           <div class="ex-quarter">
-            <figure class="ex-diagram" aria-label="How to do a ${escapeHtml(exercise.name)}, start and end position">${diagramFor(exercise)}</figure>
+            ${diagramBlock(exercise)}
             <p class="ex-cue"><strong>Remember</strong>${escapeHtml(exercise.cue)}</p>
           </div>
           <p class="overline ex-steps-title">Step by step</p>
@@ -361,6 +375,7 @@ function openMuscle(id, { level = 'all', fresh = false } = {}) {
   if (fresh) state.place = 'all';
   state.muscle = id;
   state.view = viewFor(id);
+  stopDiagrams();
   app().innerHTML = viewMuscle(muscle);
   if (replace) history.replaceState(null, '', `#/${id}`);
   else location.hash = `#/${id}`;
@@ -372,6 +387,7 @@ function wireMuscle(muscle) {
   document.body.classList.remove('is-home');
   el('back').addEventListener('click', () => { location.hash = '#/'; });
   const redraw = (focusId) => {
+    stopDiagrams();
     app().innerHTML = viewMuscle(muscle);
     wireMuscle(muscle);
     app().classList.add('no-stagger');
@@ -399,6 +415,7 @@ function wireMuscle(muscle) {
     if (choice && !choice.disabled) choose(choice.dataset.level);
   });
   wireLevelKeys(row, choose);
+  wireDiagrams(app());
 }
 
 /**
@@ -948,6 +965,8 @@ function openPeek(id, onClose = null) {
 const peekLevel = (id) => (picked ? usableLevel(id, pickLevel) : 'all');
 
 function route() {
+  // no rep outlives its page: stop it before the markup goes
+  stopDiagrams();
   app().classList.remove('no-stagger');
   dismissPick();
   const hash = location.hash.replace(/^#/, '').replace(/^\//, '');
